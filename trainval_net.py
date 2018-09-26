@@ -1,7 +1,8 @@
 # --------------------------------------------------------
 # Pytorch multi-GPU Faster R-CNN
 # Licensed under The MIT License [see LICENSE for details]
-# Written by Jiasen Lu, Jianwei Yang, based on code from Ross Girshick
+# Modified by Ankoor Bhagat, based on code from Jiasen Lu, Jianwei Yang,
+# which is based on code from Ross Girshick
 # --------------------------------------------------------
 from __future__ import absolute_import
 from __future__ import division
@@ -21,8 +22,6 @@ from torch.utils.data.sampler import Sampler
 
 from model.utils.config import cfg, cfg_from_file, cfg_from_list
 from model.utils.net_utils import adjust_learning_rate, save_checkpoint, clip_gradient
-from roi_data_layer.roibatchLoader import roibatchLoader
-from roi_data_layer.roidb import combined_roidb
 
 
 def parse_args():
@@ -47,7 +46,7 @@ def parse_args():
                         help='number of iterations to display',
                         default=100, type=int)
     parser.add_argument('--checkpoint_interval', dest='checkpoint_interval',
-                        help='number of iterations to display',
+                        help='number of iterations to after which to checkpoint',
                         default=10000, type=int)
 
     parser.add_argument('--save_dir', dest='save_dir',
@@ -74,6 +73,9 @@ def parse_args():
     parser.add_argument('--cag', dest='class_agnostic',
                         help='whether perform class_agnostic bbox regression',
                         action='store_true')
+    parser.add_argument('--as', dest='anchor_scales',
+                        help='anchor_scales',
+                        default=3, type=int)
 
     # config optimization
     parser.add_argument('--o', dest='optimizer',
@@ -115,7 +117,9 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-
+# Data Sampler
+# Every Sampler subclass has to provide an __iter__ method, providing a way to iterate over indices of dataset
+# elements, and a __len__ method that returns the length of the returned iterators.
 class sampler(Sampler):
     def __init__(self, train_size, batch_size):
         self.num_data = train_size
@@ -145,26 +149,47 @@ if __name__ == '__main__':
 
     args = parse_args()
 
+    # Import network definition
     if args.arch == 'rcnn':
-        from model.faster_rcnn.vgg16 import vgg16
         from model.faster_rcnn.resnet import resnet
     elif args.arch == 'rfcn':
         from model.rfcn.resnet_atrous import resnet
     elif args.arch == 'couplenet':
         from model.couplenet.resnet_atrous import resnet
 
+    # Import ROI functions as per dataset
+    if args.dataset == 'kaggle_pna':
+        from roi_data_layer.pnaRoiBatchLoader import roibatchLoader
+        from roi_data_layer.pna_roidb import combined_roidb
+    else:
+        from roi_data_layer.roibatchLoader import roibatchLoader
+        from roi_data_layer.roidb import combined_roidb
+
     print('Called with args:')
     print(args)
 
+    # Set up logger
     if args.use_tfboard:
         from model.utils.logger import Logger
         # Set the logger
         logger = Logger('./logs')
 
+    # Anchor settings: ANCHOR_SCALES: [8, 16, 32] or [4, 8, 16, 32]
+    if args.anchor_scales == 3:
+        scales = [8, 16, 32]
+    elif args.anchor_scales == 4:
+        scales = [4, 8, 16, 32]
+
+    # Dataset related settings: MAX_NUM_GT_BOXES: 20, 30, 50
     if args.dataset == "pascal_voc":
         args.imdb_name = "voc_2007_trainval"
         args.imdbval_name = "voc_2007_test"
-        args.set_cfgs = ['ANCHOR_SCALES', '[8, 16, 32]', 'ANCHOR_RATIOS', '[0.5,1,2]', 'MAX_NUM_GT_BOXES', '20']
+        args.set_cfgs = ['ANCHOR_SCALES', str(scales), 'ANCHOR_RATIOS', '[0.5,1,2]', 'MAX_NUM_GT_BOXES', '20']
+    elif args.dataset == "kaggle_pna":
+        args.imdb_name = "pna_2018_trainval"
+        args.imdbval_name = "pna_2018_test"
+        args.set_cfgs = ['ANCHOR_SCALES', str(scales), 'ANCHOR_RATIOS', '[0.5,1,2]', 'MAX_NUM_GT_BOXES', '30']
+
     elif args.dataset == "pascal_voc_0712":
         args.imdb_name = "voc_2007_trainval+voc_2012_trainval"
         args.imdbval_name = "voc_2007_test"
@@ -195,12 +220,12 @@ if __name__ == '__main__':
     pprint.pprint(cfg)
     np.random.seed(cfg.RNG_SEED)
 
-    #torch.backends.cudnn.benchmark = True
+    # Warning to use cuda if available
     if torch.cuda.is_available() and not args.cuda:
         print("WARNING: You have a CUDA device, so you should probably run with --cuda")
 
-    # train set
-    # -- Note: Use validation set and disable the flipped to enable faster loading.
+    # Train set
+    # Note: Use validation set and disable the flipped to enable faster loading.
     cfg.TRAIN.USE_FLIPPED = True
     cfg.USE_GPU_NMS = args.cuda
     imdb, roidb, ratio_list, ratio_index = combined_roidb(args.imdb_name)
@@ -220,21 +245,21 @@ if __name__ == '__main__':
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size,
                                              sampler=sampler_batch, num_workers=args.num_workers)
 
-    # initilize the tensor holder here.
+    # Initilize the tensor holder
     im_data = torch.FloatTensor(1)
     im_info = torch.FloatTensor(1)
     num_boxes = torch.LongTensor(1)
     gt_boxes = torch.FloatTensor(1)
 
 
-    # ship to cuda
+    # Copy tensors in CUDA memory
     if args.cuda:
         im_data = im_data.cuda()
         im_info = im_info.cuda()
         num_boxes = num_boxes.cuda()
         gt_boxes = gt_boxes.cuda()
 
-    # make variable
+    # Make variable
     im_data = Variable(im_data)
     im_info = Variable(im_info)
     num_boxes = Variable(num_boxes)
@@ -243,21 +268,28 @@ if __name__ == '__main__':
     if args.cuda:
         cfg.CUDA = True
 
-    # initilize the network here.
+    # Initilize the network:
     if args.net == 'vgg16':
-        model = vgg16(imdb.classes, pretrained=True, class_agnostic=args.class_agnostic)
+        # model = vgg16(imdb.classes, pretrained=True, class_agnostic=args.class_agnostic)
+        print("Pretrained model is not downloaded and network is not used")
+    elif args.net == 'res18':
+        model = resnet(imdb.classes, 18, pretrained=False, class_agnostic=args.class_agnostic)  # TODO: Check dim error
+    elif args.net == 'res34':
+        model = resnet(imdb.classes, 34, pretrained=False, class_agnostic=args.class_agnostic)   # TODO: Check dim error
+    elif args.net == 'res50':
+        model = resnet(imdb.classes, 50, pretrained=False, class_agnostic=args.class_agnostic)   # TODO: Check dim error
     elif args.net == 'res101':
         model = resnet(imdb.classes, 101, pretrained=True, class_agnostic=args.class_agnostic)
-    elif args.net == 'res50':
-        model = resnet(imdb.classes, 50, pretrained=True, class_agnostic=args.class_agnostic)
     elif args.net == 'res152':
         model = resnet(imdb.classes, 152, pretrained=True, class_agnostic=args.class_agnostic)
     else:
         print("network is not defined")
         pdb.set_trace()
 
+    # Create network architecture
     model.create_architecture()
 
+    # Update model parameters
     lr = cfg.TRAIN.LEARNING_RATE
     lr = args.lr
     #tr_momentum = cfg.TRAIN.MOMENTUM
@@ -272,6 +304,7 @@ if __name__ == '__main__':
             else:
                 params += [{'params':[value],'lr':lr, 'weight_decay': cfg.TRAIN.WEIGHT_DECAY}]
 
+    # Optimizer
     if args.optimizer == "adam":
         lr = lr * 0.1
         optimizer = torch.optim.Adam(params)
@@ -279,9 +312,10 @@ if __name__ == '__main__':
     elif args.optimizer == "sgd":
         optimizer = torch.optim.SGD(params, momentum=cfg.TRAIN.MOMENTUM)
 
+    # Resume training
     if args.resume:
         load_name = os.path.join(output_dir,
-                                 'faster_rcnn_{}_{}_{}.pth'.format(args.checksession, args.checkepoch, args.checkpoint))
+                                 '{}_{}_{}_{}.pth'.format(args.arch, args.checksession, args.checkepoch, args.checkpoint))
         print("loading checkpoint %s" % (load_name))
         checkpoint = torch.load(load_name)
         args.session = checkpoint['session']
@@ -293,25 +327,31 @@ if __name__ == '__main__':
             cfg.POOLING_MODE = checkpoint['pooling_mode']
         print("loaded checkpoint %s" % (load_name))
 
+    # Train on Multiple GPUS
     if args.mGPUs:
         model = nn.DataParallel(model)
 
+    # Copy network to CUDA memroy
     if args.cuda:
         model.cuda()
 
+    # Training loop
     iters_per_epoch = int(train_size / args.batch_size)
 
     for epoch in range(args.start_epoch, args.max_epochs + 1):
         dataset.resize_batch()
-        # setting to train mode
+
+        # Set model to train mode
         model.train()
         loss_temp = 0
         start = time.time()
 
+        # Update learning rate as per decay step
         if epoch % (args.lr_decay_step + 1) == 0:
             adjust_learning_rate(optimizer, args.lr_decay_gamma)
             lr *= args.lr_decay_gamma
 
+        # Get batch data and train
         data_iter = iter(dataloader)
         for step in range(iters_per_epoch):
             data = next(data_iter)
@@ -320,6 +360,7 @@ if __name__ == '__main__':
             gt_boxes.data.resize_(data[2].size()).copy_(data[2])
             num_boxes.data.resize_(data[3].size()).copy_(data[3])
 
+            # Compute multi-task loss
             model.zero_grad()
             rois, cls_prob, bbox_pred, \
             rpn_loss_cls, rpn_loss_box, \
@@ -330,13 +371,14 @@ if __name__ == '__main__':
                    + RCNN_loss_cls.mean() + RCNN_loss_bbox.mean()
             loss_temp += loss.data[0]
 
-            # backward
+            # Backward pass to compute gradients and update weights
             optimizer.zero_grad()
             loss.backward()
             if args.net == "vgg16":
                 clip_gradient(model, 10.)
             optimizer.step()
 
+            # Display training stats on terminal
             if step % args.disp_interval == 0:
                 end = time.time()
                 if step > 0:
@@ -376,8 +418,9 @@ if __name__ == '__main__':
                 loss_temp = 0
                 start = time.time()
 
+        # Save model at checkpoints
         if args.mGPUs:
-            save_name = os.path.join(output_dir, 'faster_rcnn_{}_{}_{}.pth'.format(args.session, epoch, step))
+            save_name = os.path.join(output_dir, '{}_{}_{}_{}.pth'.format(args.arch, args.session, epoch, step))
             save_checkpoint({
                 'session': args.session,
                 'epoch': epoch + 1,
@@ -387,7 +430,7 @@ if __name__ == '__main__':
                 'class_agnostic': args.class_agnostic,
             }, save_name)
         else:
-            save_name = os.path.join(output_dir, 'faster_rcnn_{}_{}_{}.pth'.format(args.session, epoch, step))
+            save_name = os.path.join(output_dir, '{}_{}_{}_{}.pth'.format(args.arch, args.session, epoch, step))
             save_checkpoint({
                 'session': args.session,
                 'epoch': epoch + 1,
@@ -400,3 +443,4 @@ if __name__ == '__main__':
 
         end = time.time()
         print(end - start)
+
