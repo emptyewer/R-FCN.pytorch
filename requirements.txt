@@ -5,3 +5,5 @@ scipy
 easydict
 matplotlib
 pyyaml
+pandas
+pydicom

@@ -15,6 +15,7 @@ from datasets.pascal_voc import pascal_voc
 from datasets.coco import coco
 from datasets.imagenet import imagenet
 from datasets.vg import vg
+from datasets.kaggle_pna import kaggle_pna
 
 import numpy as np
 
@@ -58,6 +59,12 @@ for split in ['train', 'val', 'val1', 'val2', 'test']:
     devkit_path = 'data/imagenet/ILSVRC/devkit'
     data_path = 'data/imagenet/ILSVRC'
     __sets[name] = (lambda split=split, devkit_path=devkit_path, data_path=data_path: imagenet(split,devkit_path,data_path))
+
+# Set up Kaggle PNA: pna_<year>_<split>
+for year in ['2018']:
+  for split in ['train', 'val', 'trainval', 'test']:
+    name = 'pna_{}_{}'.format(year, split)
+    __sets[name] = (lambda split=split, year=year: kaggle_pna(split, year))
 
 def get_imdb(name):
   """Get an imdb (image database) by name."""
