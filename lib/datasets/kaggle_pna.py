@@ -15,6 +15,7 @@ import scipy.sparse
 import pickle
 from .pna_imdb import imdb
 from model.utils.config import cfg
+import sys
 
 
 try:
@@ -71,7 +72,14 @@ class kaggle_pna(imdb):
         """
         #dcm_dir = "DCMImagesTest" if self.config['mode'] == 'test' else "DCMImagesTrain"
         #print('dcm_dir: ', dcm_dir)
-        image_path = os.path.join(self._data_path, "DCMImagesTrain", pid + self._image_ext)
+        print("debug image path from index")
+        print(self._image_set)
+        print("debug image path from index end")
+        sys.stdout.flush()
+        if self._image_set == "train":
+            image_path = os.path.join(self._data_path, "DCMImagesTrain", pid + self._image_ext)
+        if self._image_set == "test":
+            image_path = os.path.join(self._data_path, "DCMImagesTest", pid + self._image_ext)
         assert os.path.exists(image_path), 'Path does not exist: {}'.format(image_path)
         return image_path
 
