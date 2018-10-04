@@ -1,3 +1,4 @@
+
 """The data layer used during training to train a Fast R-CNN network.
 """
 
@@ -6,11 +7,11 @@ from __future__ import division
 from __future__ import print_function
 
 import torch.utils.data as data
-from PIL import Image
+import pydicom
 import torch
 
 from model.utils.config import cfg
-from roi_data_layer.minibatch import get_minibatch, get_minibatch
+from roi_data_layer.pna_minibatch import get_minibatch
 from model.rpn.bbox_transform import bbox_transform_inv, clip_boxes
 
 import numpy as np
@@ -108,7 +109,7 @@ class roibatchLoader(data.Dataset):
                 max_y = int(torch.max(gt_boxes[:,3]))
                 trim_size = int(np.floor(data_width / ratio))
                 if trim_size > data_height:
-                    trim_size = data_height                
+                    trim_size = data_height
                 box_region = max_y - min_y + 1
                 if min_y == 0:
                     y_s = 0
@@ -144,7 +145,7 @@ class roibatchLoader(data.Dataset):
                 max_x = int(torch.max(gt_boxes[:,2]))
                 trim_size = int(np.ceil(data_height * ratio))
                 if trim_size > data_width:
-                    trim_size = data_width                
+                    trim_size = data_width
                 box_region = max_x - min_x + 1
                 if min_x == 0:
                     x_s = 0
