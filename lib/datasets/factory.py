@@ -18,6 +18,7 @@ from datasets.vg import vg
 from datasets.kaggle_pna import kaggle_pna
 
 import numpy as np
+import sys
 
 # Set up voc_<year>_<split>
 for year in ['2007', '2012']:
@@ -70,6 +71,10 @@ def get_imdb(name):
   """Get an imdb (image database) by name."""
   if name not in __sets:
     raise KeyError('Unknown dataset: {}'.format(name))
+  print("get imdb debug")
+  print(name)
+  print("get imdb debug end")
+  sys.stdout.flush()
   return __sets[name]()
 
 
