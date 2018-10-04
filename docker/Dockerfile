@@ -25,5 +25,6 @@ b opencv-python opencv-contrib-python easydict pandas pydicom
 ENV PYTHONPATH $RFCN_ROOT/lib:$PYTHONPATH
 WORKDIR $RFCN_ROOT/lib
 RUN ./make.sh
+RUN ./make.sh
 
 WORKDIR /opt/R-FCN.pytorch
