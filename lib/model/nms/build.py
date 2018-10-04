@@ -20,6 +20,13 @@ if torch.cuda.is_available():
 
 if not torch.cuda.is_available():
     print('Not Including CUDA code.')
+    if not hasattr(torch._C, '_cuda_isDriverSufficient'):
+        print("issue 1")
+    if not torch._C._cuda_isDriverSufficient():
+        print("issue 2")
+    elif torch._C._cuda_getDeviceCount() <= 0:
+        print("issue 3".format(torch._C._cuda_getDeviceCount()))
+
 
 this_file = os.path.dirname(os.path.realpath(__file__))
 print(this_file)
