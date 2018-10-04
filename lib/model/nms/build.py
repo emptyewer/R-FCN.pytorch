@@ -10,14 +10,14 @@ headers = []
 defines = []
 with_cuda = False
 
-if torch.cuda.is_available():
-    print('Including CUDA code.')
-    sources += ['src/nms_cuda.c']
-    headers += ['src/nms_cuda.h']
-    defines += [('WITH_CUDA', None)]
-    with_cuda = True
 
+print('Including CUDA code.')
+sources += ['src/nms_cuda.c']
+headers += ['src/nms_cuda.h']
+defines += [('WITH_CUDA', None)]
+with_cuda = True
 
+"""
 if not torch.cuda.is_available():
     print('Not Including CUDA code.')
     if not hasattr(torch._C, '_cuda_isDriverSufficient'):
@@ -26,7 +26,7 @@ if not torch.cuda.is_available():
         print("issue 2")
     elif torch._C._cuda_getDeviceCount() <= 0:
         print("issue 3".format(torch._C._cuda_getDeviceCount()))
-
+"""
 
 this_file = os.path.dirname(os.path.realpath(__file__))
 print(this_file)
