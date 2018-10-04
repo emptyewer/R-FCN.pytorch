@@ -72,9 +72,6 @@ class kaggle_pna(imdb):
         """
         #dcm_dir = "DCMImagesTest" if self.config['mode'] == 'test' else "DCMImagesTrain"
         #print('dcm_dir: ', dcm_dir)
-        print("debug image path from index")
-        print(self._image_set)
-        print("debug image path from index end")
         sys.stdout.flush()
         if self._image_set == "train":
             image_path = os.path.join(self._data_path, "DCMImagesTrain", pid + self._image_ext)
