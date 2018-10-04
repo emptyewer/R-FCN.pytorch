@@ -28,8 +28,7 @@ def bbox_transform(ex_rois, gt_rois):
     targets_dw = torch.log(gt_widths / ex_widths)
     targets_dh = torch.log(gt_heights / ex_heights)
 
-    targets = torch.stack(
-        (targets_dx, targets_dy, targets_dw, targets_dh),1)
+    targets = torch.stack((targets_dx, targets_dy, targets_dw, targets_dh),1)
 
     return targets
 

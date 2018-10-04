@@ -10,7 +10,7 @@ from __future__ import print_function
 
 import os
 import os.path as osp
-import PIL
+from pydicom import dcmread
 from model.utils.cython_bbox import bbox_overlaps
 import numpy as np
 import scipy.sparse
@@ -108,7 +108,7 @@ class imdb(object):
     raise NotImplementedError
 
   def _get_widths(self):
-    return [PIL.Image.open(self.image_path_at(i)).size[0]
+    return [dcmread(self.image_path_at(i)).pixel_array.shape[0]
             for i in range(self.num_images)]
 
   def append_flipped_images(self):
@@ -120,8 +120,10 @@ class imdb(object):
       #print('width: ', widths[i])
       oldx1 = boxes[:, 0].copy()
       oldx2 = boxes[:, 2].copy()
-      boxes[:, 0] = widths[i] - oldx2 - 1
-      boxes[:, 2] = widths[i] - oldx1 - 1
+      boxes[:, 0] = widths[i] - oldx2 # - 1
+      boxes[:, 2] = widths[i] - oldx1 # - 1
+      #print('x1s: ', widths[i] - oldx2 - 1, widths[i] - oldx2)
+      #print('x2s: ', widths[i] - oldx1 - 1, widths[i] - oldx1)
       #print('boxes (after): ', boxes, ' roidb: ', self.roidb[i])
       assert (boxes[:, 2] >= boxes[:, 0]).all()
       entry = {'boxes': boxes,
