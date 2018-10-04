@@ -17,6 +17,10 @@ if torch.cuda.is_available():
     defines += [('WITH_CUDA', None)]
     with_cuda = True
 
+
+if not torch.cuda.is_available():
+    print('Not Including CUDA code.')
+
 this_file = os.path.dirname(os.path.realpath(__file__))
 print(this_file)
 extra_objects = ['src/nms_cuda_kernel.cu.o']
