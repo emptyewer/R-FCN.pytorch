@@ -181,10 +181,6 @@ if __name__ == '__main__':
     pprint.pprint(cfg)
 
     cfg.TRAIN.USE_FLIPPED = False
-    print("test net debug")
-    print(args.imdbval_name)
-    print("test net debug end")
-    sys.stdout.flush()
 
     imdb, roidb, ratio_list, ratio_index = combined_roidb(args.imdbval_name, False)
     imdb.competition_mode(on=True)

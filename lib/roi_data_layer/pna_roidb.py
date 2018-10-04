@@ -8,7 +8,6 @@ import numpy as np
 from model.utils.config import cfg
 from datasets.factory import get_imdb
 import pydicom
-import sys
 
 def prepare_roidb(imdb):
     """Enrich the imdb's roidb by adding some derived quantities that
@@ -89,9 +88,6 @@ def combined_roidb(imdb_names, training=True):
     """
     Combine multiple roidbs
     """
-    print("combined roidb debug")
-    print(imdb_names)
-
     def get_training_roidb(imdb):
         """Returns a roidb (Region of Interest database) for use in training."""
         if cfg.TRAIN.USE_FLIPPED:
@@ -113,9 +109,6 @@ def combined_roidb(imdb_names, training=True):
         print('Set proposal method: {:s}'.format(cfg.TRAIN.PROPOSAL_METHOD))
         roidb = get_training_roidb(imdb)
         return roidb
-
-    print("debug end")
-    sys.stdout.flush()
 
     roidbs = [get_roidb(s) for s in imdb_names.split('+')]
     roidb = roidbs[0]
