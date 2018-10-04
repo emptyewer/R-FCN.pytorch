@@ -29,6 +29,7 @@ from model.rpn.bbox_transform import bbox_transform_inv
 from model.utils.net_utils import save_net, load_net, vis_detections
 from datetime import datetime
 import pdb
+import sys
 
 try:
     xrange  # Python 2
@@ -180,6 +181,11 @@ if __name__ == '__main__':
     pprint.pprint(cfg)
 
     cfg.TRAIN.USE_FLIPPED = False
+    print("test net debug")
+    print(args.imdbval_name)
+    print("test net debug end")
+    sys.stdout.flush()
+
     imdb, roidb, ratio_list, ratio_index = combined_roidb(args.imdbval_name, False)
     imdb.competition_mode(on=True)
     imdb.sub_mode = True
