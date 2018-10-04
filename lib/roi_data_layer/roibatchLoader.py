@@ -1,4 +1,3 @@
-
 """The data layer used during training to train a Fast R-CNN network.
 """
 
