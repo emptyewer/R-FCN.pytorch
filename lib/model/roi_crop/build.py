@@ -10,12 +10,11 @@ headers = ['src/roi_crop.h']
 defines = []
 with_cuda = False
 
-if torch.cuda.is_available():
-    print('Including CUDA code.')
-    sources += ['src/roi_crop_cuda.c']
-    headers += ['src/roi_crop_cuda.h']
-    defines += [('WITH_CUDA', None)]
-    with_cuda = True
+print('Including CUDA code.')
+sources += ['src/roi_crop_cuda.c']
+headers += ['src/roi_crop_cuda.h']
+defines += [('WITH_CUDA', None)]
+with_cuda = True
 
 this_file = os.path.dirname(os.path.realpath(__file__))
 print(this_file)
