@@ -46,7 +46,7 @@ class kaggle_pna(imdb):
                              'lung opacity')
         else:
             raise ValueError("Invalid Number of Classes: {}".format(num_classes))
-        print("Number of Classes: {}".format(self.num_classes))
+        print("kaggle pna.py, Number of Classes: {}".format(self.num_classes))
         sys.stdout.flush()
         self._class_to_ind = dict(zip(self.classes, xrange(self.num_classes)))
 
