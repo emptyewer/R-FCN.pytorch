@@ -46,7 +46,10 @@ class kaggle_pna(imdb):
                              'lung opacity')
         else:
             raise ValueError("Invalid Number of Classes: {}".format(num_classes))
+        print("Number of Classes: {}".format(self.num_classes))
+        sys.stdout.flush()
         self._class_to_ind = dict(zip(self.classes, xrange(self.num_classes)))
+
         self._image_ext = '.dcm'
         self._image_index = self._load_image_set_index()
         self._roidb_handler = self.gt_roidb
@@ -166,6 +169,12 @@ class kaggle_pna(imdb):
 
         objs.reset_index(drop=True, inplace=True)
         objs = pd.DataFrame(objs)
+
+        class0_count = 0
+        class1_count = 0
+        class2_count = 0
+        class3_count = 0
+
         for ix, obj in objs.iterrows():
             # Get bounding box coordinates (use width and height to get x2, y2)
             x1 = float(obj['x'])
@@ -184,11 +193,25 @@ class kaggle_pna(imdb):
                 if obj_class == 'no lung opacity / not normal' or obj_class == 'normal':
                     obj_class = "normal"
 
+            if obj_class == "__background__":
+                class0_count += 1
+            if obj_class == "normal":
+                class1_count += 1
+            if obj_class == "no lung opacity / not normal":
+                class2_count += 1
+            if obj_class == "lung opacity":
+                class3_count += 1
+
             cls = self._class_to_ind[obj_class]
             # check based on file
             gt_classes[ix] = cls
             overlaps[ix, cls] = 1.0  # TODO: Check if 0.0 makes any difference, check pascal data xml
             seg_areas[ix] = 0.0
+        print("class 0 count: {}, class 1 count: {}, class 2 count: {}, class 3 count: {}".format(class0_count,
+                                                                                                  class1_count,
+                                                                                                  class2_count,
+                                                                                                  class3_count))
+        sys.stdout.flush()
 
         overlaps = scipy.sparse.csr_matrix(overlaps)
 
