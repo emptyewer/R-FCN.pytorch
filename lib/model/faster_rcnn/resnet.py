@@ -5,6 +5,7 @@ from __future__ import print_function
 from model.utils.config import cfg
 from model.faster_rcnn.faster_rcnn import _fasterRCNN
 
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -220,7 +221,11 @@ def resnet152(pretrained=False):
 class resnet(_fasterRCNN):
   def __init__(self, classes, num_layers=101, pretrained=False, class_agnostic=False):
     self.num_layers = num_layers
-    self.model_path = 'data/pretrained_model/resnet{}_rcnn.pth'.format(self.num_layers)
+
+    import model
+    model_repo_path = os.path.dirname(os.path.dirname(os.path.dirname(model.__file__)))
+    self.model_path = os.path.join(model_repo_path, 'data/pretrained_model/resnet{}_rcnn.pth'.format(self.num_layers))
+
     self.dout_base_model = 1024
     self.pretrained = pretrained
     self.class_agnostic = class_agnostic

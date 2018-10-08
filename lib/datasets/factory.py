@@ -60,11 +60,13 @@ for split in ['train', 'val', 'val1', 'val2', 'test']:
     data_path = 'data/imagenet/ILSVRC'
     __sets[name] = (lambda split=split, devkit_path=devkit_path, data_path=data_path: imagenet(split,devkit_path,data_path))
 
+# modify here
 # Set up Kaggle PNA: pna_<year>_<split>
 for year in ['2018']:
   for split in ['train', 'val', 'trainval', 'test']:
-    name = 'pna_{}_{}'.format(year, split)
-    __sets[name] = (lambda split=split, year=year: kaggle_pna(split, year))
+      for num_classes in range(2,5,1):
+        name = 'pna_{}_{}_{}'.format(year, split, num_classes)
+        __sets[name] = (lambda split=split, year=year: kaggle_pna(split, year, num_classes))
 
 def get_imdb(name):
   """Get an imdb (image database) by name."""

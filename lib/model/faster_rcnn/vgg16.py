@@ -7,6 +7,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -18,7 +19,9 @@ import pdb
 
 class vgg16(_fasterRCNN):
   def __init__(self, classes, pretrained=False, class_agnostic=False):
-    self.model_path = 'data/pretrained_model/vgg16_caffe.pth'
+    import model
+    model_repo_path = os.path.dirname(os.path.dirname(os.path.dirname(model.__file__)))
+    self.model_path = os.path.join(model_repo_path,'data/pretrained_model/vgg16_caffe.pth')
     self.dout_base_model = 512
     self.pretrained = pretrained
     self.class_agnostic = class_agnostic

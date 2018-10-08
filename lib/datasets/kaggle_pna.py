@@ -25,17 +25,27 @@ except NameError:
 
 
 class kaggle_pna(imdb):
-    def __init__(self, image_set, year, devkit_path=None):
+    def __init__(self, image_set, year, num_classes, devkit_path=None):
         imdb.__init__(self, 'pna_' + year + '_' + image_set)
         self._year = year
         self._image_set = image_set
         self._devkit_path = self._get_default_path() if devkit_path is None else devkit_path
         self._data_path = self._devkit_path
         # TODO: Change _classes for binary
-        self._classes = ('__background__',  # background - always index 0
-                         'no lung opacity / not normal',
-                         'normal',
-                         'lung opacity')
+        if num_classes == 2:
+            self._classes = ('__background__',
+                             'lung opacity')
+        elif num_classes == 3:
+            self._classes = ('__background__',
+                             'normal',
+                             'lung opacity')
+        elif num_classes == 4:
+            self._classes = ('__background__',
+                             'no lung opacity / not normal',
+                             'normal',
+                             'lung opacity')
+        else:
+            raise ValueError("Invalid Number of Classes: {}".format(num_classes))
         self._class_to_ind = dict(zip(self.classes, xrange(self.num_classes)))
         self._image_ext = '.dcm'
         self._image_index = self._load_image_set_index()
@@ -165,7 +175,17 @@ class kaggle_pna(imdb):
             boxes[ix, :] = [x1, y1, x2, y2]
 
             ishards[ix] = 0  # Difficult is set as 0 as no information available
-            cls = self._class_to_ind[obj['class'].lower()]  # TODO: Change here for binary
+
+            obj_class = obj['class'].lower()
+            if self.num_classes == 2:
+                if obj_class != 'lung opacity':
+                    obj_class = "__background__"
+            elif self.num_classes == 3:
+                if obj_class == 'no lung opacity / not normal' or obj_class == 'normal':
+                    obj_class = "normal"
+
+            cls = self._class_to_ind[obj_class]
+            # check based on file
             gt_classes[ix] = cls
             overlaps[ix, cls] = 1.0  # TODO: Check if 0.0 makes any difference, check pascal data xml
             seg_areas[ix] = 0.0
