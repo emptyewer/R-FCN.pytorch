@@ -131,11 +131,6 @@ def train(dataset="kaggle_pna", arch="couplenet", net="res152", start_epoch=1, m
     if set_cfgs is not None:
         cfg_from_list(set_cfgs)
 
-
-    # set cfg from kwargs
-    cfg.update(kwargs)
-
-    """
     train_kwargs = kwargs.pop("TRAIN", None)
     resnet_kwargs = kwargs.pop("RESNET", None)
     mobilenet_kwargs = kwargs.pop("MOBILENET", None)
@@ -150,8 +145,8 @@ def train(dataset="kaggle_pna", arch="couplenet", net="res152", start_epoch=1, m
     if mobilenet_kwargs is not None:
         cfg["MOBILENET"].update(mobilenet_kwargs)
         
-    if kwargs is not None
-    """
+    if kwargs is not None:
+        cfg.update(kwargs)
 
     print('Using config:')
     pprint.pprint(cfg)
