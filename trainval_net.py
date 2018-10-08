@@ -10,6 +10,7 @@ from __future__ import print_function
 
 import argparse
 import os
+import sys
 import pdb
 import pprint
 import time
@@ -273,6 +274,8 @@ def train(dataset="kaggle_pna", arch="couplenet", net="res152", start_epoch=1, m
     # Training loop
     iters_per_epoch = int(train_size / batch_size)
 
+    sys.stdout.flush()
+
     for epoch in range(start_epoch, max_epochs + 1):
         dataset.resize_batch()
 
@@ -349,6 +352,8 @@ def train(dataset="kaggle_pna", arch="couplenet", net="res152", start_epoch=1, m
                     }
                     for tag, value in info.items():
                         logger.scalar_summary(tag, value, step)
+
+                sys.stdout.flush()
 
                 loss_temp = 0
                 start = time.time()
