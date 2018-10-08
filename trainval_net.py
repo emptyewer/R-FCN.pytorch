@@ -151,6 +151,7 @@ def train(dataset="kaggle_pna", arch="couplenet", net="res152", start_epoch=1, m
     print('Using config:')
     pprint.pprint(cfg)
     np.random.seed(cfg.RNG_SEED)
+    print("LEARNING RATE: {}".format(cfg.TRAIN.LEARNING_RATE))
 
     # Warning to use cuda if available
     if torch.cuda.is_available() and not cuda:
@@ -222,7 +223,6 @@ def train(dataset="kaggle_pna", arch="couplenet", net="res152", start_epoch=1, m
 
     # Update model parameters
     lr = cfg.TRAIN.LEARNING_RATE
-    lr = lr
     #tr_momentum = cfg.TRAIN.MOMENTUM
     #tr_momentum = args.momentum
 
@@ -246,7 +246,7 @@ def train(dataset="kaggle_pna", arch="couplenet", net="res152", start_epoch=1, m
     # Resume training
     if resume:
         load_name = os.path.join(output_dir,
-                                 '{}_{}_{}_{}.pth'.format(args.arch, args.checksession, args.checkepoch, args.checkpoint))
+                                 '{}_{}_{}_{}.pth'.format(arch, checksession, checkepoch, checkpoint))
         print("loading checkpoint %s" % (load_name))
         checkpoint = torch.load(load_name)
         session = checkpoint['session']
