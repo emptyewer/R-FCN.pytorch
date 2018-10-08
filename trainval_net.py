@@ -58,7 +58,7 @@ def train(dataset="kaggle_pna", arch="couplenet", net="res152", start_epoch=1, m
           checkpoint_interval=10000, save_dir="save", num_workers=4, cuda=True, large_scale=False, mGPUs=True,
           ohem=False, batch_size=4, class_agnostic=False, anchor_scales=4, optimizer="sgd", lr=.001, lr_decay_step=5,
           lr_decay_gamma=.1, session=1, resume=False, checksession=1, checkepoch=1, checkpoint=0, use_tfboard=False,
-          model_repo_path="", **kwargs):
+          **kwargs):
 
     # Import network definition
     if arch == 'rcnn':
@@ -118,6 +118,9 @@ def train(dataset="kaggle_pna", arch="couplenet", net="res152", start_epoch=1, m
         imdb_name = "vg_150-50-50_minitrain"
         imdbval_name = "vg_150-50-50_minival"
         set_cfgs = ['ANCHOR_SCALES', '[4, 8, 16, 32]', 'ANCHOR_RATIOS', '[0.5,1,2]', 'MAX_NUM_GT_BOXES', '50']
+
+    import model
+    model_repo_path = os.path.dirname(os.path.dirname(os.path.dirname(model.__file__)))
 
     cfg_file = os.path.join(model_repo_path,"cfgs/{}_ls.yml".format(net)) if large_scale else \
         os.path.join(model_repo_path,"cfgs/{}.yml".format(net))
