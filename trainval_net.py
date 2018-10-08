@@ -119,7 +119,8 @@ def train(dataset="kaggle_pna", arch="couplenet", net="res152", start_epoch=1, m
         imdbval_name = "vg_150-50-50_minival"
         set_cfgs = ['ANCHOR_SCALES', '[4, 8, 16, 32]', 'ANCHOR_RATIOS', '[0.5,1,2]', 'MAX_NUM_GT_BOXES', '50']
 
-    cfg_file = model_repo_path+"cfgs/{}_ls.yml".format(net) if large_scale else  model_repo_path+"cfgs/{}.yml".format(net)
+    cfg_file = os.path.join(model_repo_path,"cfgs/{}_ls.yml".format(net)) if large_scale else \
+        os.path.join(model_repo_path,"cfgs/{}.yml".format(net))
 
     if cfg_file is not None:
         cfg_from_file(cfg_file)
