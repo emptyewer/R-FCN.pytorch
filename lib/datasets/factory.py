@@ -66,7 +66,7 @@ for year in ['2018']:
   for split in ['train', 'val', 'trainval', 'test']:
       for num_classes in range(2,5,1):
         name = 'pna_{}_{}_{}'.format(year, split, num_classes)
-        __sets[name] = (lambda split=split, year=year: kaggle_pna(split, year, num_classes))
+        __sets[name] = (lambda split=split, year=year, num_classes=num_classes: kaggle_pna(split, year, num_classes))
 
 def get_imdb(name):
   """Get an imdb (image database) by name."""
