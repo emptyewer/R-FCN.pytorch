@@ -26,7 +26,7 @@ except NameError:
 
 class kaggle_pna(imdb):
     def __init__(self, image_set, year, num_classes, devkit_path=None):
-        imdb.__init__(self, 'pna_' + year + '_' + image_set)
+        imdb.__init__(self, 'pna_' + year + '_' + image_set+"_"+num_classes)
         self._year = year
         self._image_set = image_set
         self._devkit_path = self._get_default_path() if devkit_path is None else devkit_path
