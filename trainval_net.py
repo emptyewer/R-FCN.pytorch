@@ -161,7 +161,6 @@ def train(dataset="kaggle_pna", arch="couplenet", net="res152", start_epoch=1, m
     if torch.cuda.is_available() and not cuda:
         print("WARNING: You have a CUDA device, so you should probably run with --cuda")
 
-    print("trainval_net.py, Number of Classes: {}".format(num_classes))
     # Train set
     # Note: Use validation set and disable the flipped to enable faster loading.
     cfg.TRAIN.USE_FLIPPED = True
