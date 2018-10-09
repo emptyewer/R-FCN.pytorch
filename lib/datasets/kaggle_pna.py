@@ -25,7 +25,6 @@ except NameError:
 
 
 class kaggle_pna(imdb):
-<<<<<<< HEAD
     def __init__(self, image_set, year, devkit_path=None):
         imdb.__init__(self, 'pna_' + year + '_' + image_set)
         self._year = year
