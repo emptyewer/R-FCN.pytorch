@@ -169,7 +169,6 @@ class kaggle_pna(imdb):
             gt_classes[ix] = cls
             overlaps[ix, cls] = 1.0  # TODO: Check if 0.0 makes any difference, check pascal data xml
             seg_areas[ix] = 0.0
-
         overlaps = scipy.sparse.csr_matrix(overlaps)
 
         return {'boxes': boxes,
