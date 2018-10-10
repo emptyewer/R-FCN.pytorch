@@ -55,11 +55,11 @@ class sampler(Sampler):
 
 
 # issue with cuda devices?
-def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152", start_epoch=1, max_epochs=20, disp_interval=100,
-          checkpoint_interval=10000, save_dir="save", num_workers=4, cuda=True, large_scale=False, mGPUs=True,
-          ohem=False, batch_size=4, class_agnostic=False, anchor_scales=4, optimizer="sgd", lr=.001, lr_decay_step=5,
-          lr_decay_gamma=.1, session=1, resume=False, checksession=1, checkepoch=1, checkpoint=0, use_tfboard=False,
-          **kwargs):
+def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152", start_epoch=1, max_epochs=20,
+          disp_interval=100, checkpoint_interval=10000, save_dir="save", num_workers=4, cuda=True, large_scale=False,
+          mGPUs=True, ohem=False, batch_size=4, class_agnostic=False, anchor_scales=4, optimizer="sgd", lr=.001,
+          lr_decay_step=5, lr_decay_gamma=.1, session=1, resume=False, checksession=1, checkepoch=1, checkpoint=0,
+          use_tfboard=False, **kwargs):
 
     # Import network definition
     if arch == 'rcnn':
