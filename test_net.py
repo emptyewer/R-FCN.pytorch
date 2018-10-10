@@ -211,9 +211,9 @@ def test(dataset="kaggle_pna", test_ds="val", arch="couplenet", net="res152", se
     num_images = len(imdb.image_index)
     all_boxes = [[[] for _ in xrange(num_images)] for _ in xrange(imdb.num_classes)]
 
-    dataset = roibatchLoader(roidb, ratio_list, ratio_index, batch_size,
+    img_dataset = roibatchLoader(roidb, ratio_list, ratio_index, batch_size,
                              imdb.num_classes, training=False, normalize=False)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
+    dataloader = torch.utils.data.DataLoader(img_dataset, batch_size=batch_size,
                                              shuffle=False, num_workers=0,  # args.num_workers
                                              pin_memory=True)
 
@@ -226,7 +226,7 @@ def test(dataset="kaggle_pna", test_ds="val", arch="couplenet", net="res152", se
     model.eval()
 
     empty_array = np.transpose(np.array([[], [], [], [], []]), (1, 0))
-    dataset.resize_batch()
+    img_dataset.resize_batch()
     for i in range(num_images):
 
         data = next(data_iter)
