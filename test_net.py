@@ -215,6 +215,9 @@ def test(dataset="kaggle_pna", test_ds="val", arch="couplenet", net="res152", se
     data_iter = iter(dataloader)
 
     _t = {'im_detect': time.time(), 'misc': time.time()}
+    output_dir = os.path.join(output_dir, arch, net, dataset)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
     det_file = os.path.join(output_dir, 'detections.pkl')
 
     # Turn on model evaluation mode, i.e. train=False
