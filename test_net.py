@@ -43,8 +43,9 @@ weight_decay = cfg.TRAIN.WEIGHT_DECAY
 
 
 def test(dataset="kaggle_pna", test_ds="val", arch="couplenet", net="res152", set_cfgs=None, load_dir="save",
-         cuda=True, large_scale=False, mGPUs=True, class_agnostic=False, parallel_type=0, checksession = 1,
-         checkepoch=1, checkpoint=10021, batch_size=1, vis=False, anchor_scales=4, min_conf=.5, **kwargs):
+         output_dir="output", cuda=True, large_scale=False, mGPUs=True, class_agnostic=False, parallel_type=0,
+         checksession = 1, checkepoch=1, checkpoint=10021, batch_size=1, vis=False, anchor_scales=4, min_conf=.5,
+         **kwargs):
 
     # Import network definition
     if arch == 'rcnn':
@@ -205,7 +206,6 @@ def test(dataset="kaggle_pna", test_ds="val", arch="couplenet", net="res152", se
     num_images = len(imdb.image_index)
     all_boxes = [[[] for _ in xrange(num_images)] for _ in xrange(imdb.num_classes)]
 
-    output_dir = get_output_dir(imdb, save_name)
     dataset = roibatchLoader(roidb, ratio_list, ratio_index, batch_size,
                              imdb.num_classes, training=False, normalize=False)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
