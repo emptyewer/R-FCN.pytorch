@@ -131,10 +131,7 @@ def test(dataset="kaggle_pna", test_ds="val", arch="couplenet", net="res152", se
     print('{:d} roidb entries'.format(len(roidb)))
 
     # Trained network weights path
-    import model
-    model_repo_path = os.path.dirname(os.path.dirname(os.path.dirname(model.__file__)))
     input_dir = load_dir + "/" + arch + "/" + net + "/" + dataset
-    input_dir = os.path.join(model_repo_path, input_dir)
     if not os.path.exists(input_dir):
         raise Exception('There is no input directory for loading network from ' + input_dir)
     load_name = os.path.join(input_dir,
