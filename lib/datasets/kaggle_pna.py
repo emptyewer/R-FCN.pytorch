@@ -73,8 +73,12 @@ class kaggle_pna(imdb):
         #dcm_dir = "DCMImagesTest" if self.config['mode'] == 'test' else "DCMImagesTrain"
         #print('dcm_dir: ', dcm_dir)
         sys.stdout.flush()
-        if self._image_set == "train" or self._image_set == "trainval":
+        if self._image_set == "train":
             image_path = os.path.join(self._data_path, "DCMImagesTrain", pid + self._image_ext)
+        if self._image_set == "val":
+            image_path = os.path.join(self._data_path, "DCMImagesVal", pid + self._image_ext)
+        if self._image_set == "trainval":
+            image_path = os.path.join(self._data_path, "DCMImagesTrainVal", pid + self._image_ext)
         if self._image_set == "test":
             image_path = os.path.join(self._data_path, "DCMImagesTest", pid + self._image_ext)
         assert os.path.exists(image_path), 'Path does not exist: {}'.format(image_path)

@@ -55,7 +55,7 @@ class sampler(Sampler):
 
 
 # issue with cuda devices?
-def train(dataset="kaggle_pna", arch="couplenet", net="res152", start_epoch=1, max_epochs=20, disp_interval=100,
+def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152", start_epoch=1, max_epochs=20, disp_interval=100,
           checkpoint_interval=10000, save_dir="save", num_workers=4, cuda=True, large_scale=False, mGPUs=True,
           ohem=False, batch_size=4, class_agnostic=False, anchor_scales=4, optimizer="sgd", lr=.001, lr_decay_step=5,
           lr_decay_gamma=.1, session=1, resume=False, checksession=1, checkepoch=1, checkpoint=0, use_tfboard=False,
@@ -69,13 +69,8 @@ def train(dataset="kaggle_pna", arch="couplenet", net="res152", start_epoch=1, m
     elif arch == 'couplenet':
         from model.couplenet.resnet_atrous import resnet
 
-    # Import ROI functions as per dataset
-    if dataset == 'kaggle_pna':
-        from roi_data_layer.pnaRoiBatchLoader import roibatchLoader
-        from roi_data_layer.pna_roidb import combined_roidb
-    else:
-        from roi_data_layer.roibatchLoader import roibatchLoader
-        from roi_data_layer.roidb import combined_roidb
+    from roi_data_layer.pnaRoiBatchLoader import roibatchLoader
+    from roi_data_layer.pna_roidb import combined_roidb
 
     print('Called with kwargs:')
     print(kwargs)
@@ -93,41 +88,20 @@ def train(dataset="kaggle_pna", arch="couplenet", net="res152", start_epoch=1, m
         scales = [4, 8, 16, 32]
 
     # Dataset related settings: MAX_NUM_GT_BOXES: 20, 30, 50
-    if dataset == "pascal_voc":
-        imdb_name = "voc_2007_trainval"
-        imdbval_name = "voc_2007_test"
-        set_cfgs = ['ANCHOR_SCALES', str(scales), 'ANCHOR_RATIOS', '[0.5,1,2]', 'MAX_NUM_GT_BOXES', '20']
-    elif dataset == "kaggle_pna":
+    if train_ds == "train":
+        imdb_name = "pna_2018_train"
+    elif train_ds == "trainval":
         imdb_name = "pna_2018_trainval"
-        imdbval_name = "pna_2018_test"
-        set_cfgs = ['ANCHOR_SCALES', str(scales), 'ANCHOR_RATIOS', '[0.5,1,2]', 'MAX_NUM_GT_BOXES', '30']
-    elif dataset == "pascal_voc_0712":
-        imdb_name = "voc_2007_trainval+voc_2012_trainval"
-        imdbval_name = "voc_2007_test"
-        set_cfgs = ['ANCHOR_SCALES', '[8, 16, 32]', 'ANCHOR_RATIOS', '[0.5,1,2]', 'MAX_NUM_GT_BOXES', '20']
-    elif dataset == "coco":
-        imdb_name = "coco_2014_train+coco_2014_valminusminival"
-        imdbval_name = "coco_2014_minival"
-        set_cfgs = ['ANCHOR_SCALES', '[4, 8, 16, 32]', 'ANCHOR_RATIOS', '[0.5,1,2]', 'MAX_NUM_GT_BOXES', '50']
-    elif dataset == "imagenet":
-        imdb_name = "imagenet_train"
-        imdbval_name = "imagenet_val"
-        set_cfgs = ['ANCHOR_SCALES', '[4, 8, 16, 32]', 'ANCHOR_RATIOS', '[0.5,1,2]', 'MAX_NUM_GT_BOXES', '30']
-    elif "dataset" == "vg":
-        # train sizes: train, smalltrain, minitrain
-        # train scale: ['150-50-20', '150-50-50', '500-150-80', '750-250-150', '1750-700-450', '1600-400-20']
-        imdb_name = "vg_150-50-50_minitrain"
-        imdbval_name = "vg_150-50-50_minival"
-        set_cfgs = ['ANCHOR_SCALES', '[4, 8, 16, 32]', 'ANCHOR_RATIOS', '[0.5,1,2]', 'MAX_NUM_GT_BOXES', '50']
+
+    set_cfgs = ['ANCHOR_SCALES', str(scales), 'ANCHOR_RATIOS', '[0.5,1,2]', 'MAX_NUM_GT_BOXES', '30']
 
     import model
     model_repo_path = os.path.dirname(os.path.dirname(os.path.dirname(model.__file__)))
 
-    cfg_file = os.path.join(model_repo_path,"cfgs/{}_ls.yml".format(net)) if large_scale else \
-        os.path.join(model_repo_path,"cfgs/{}.yml".format(net))
+    cfg_file = "cfgs/{}_ls.yml".format(net) if large_scale else "cfgs/{}.yml".format(net)
 
     if cfg_file is not None:
-        cfg_from_file(cfg_file)
+        cfg_from_file(os.path.join(model_repo_path,cfg_file))
     if set_cfgs is not None:
         cfg_from_list(set_cfgs)
 
@@ -276,6 +250,7 @@ def train(dataset="kaggle_pna", arch="couplenet", net="res152", start_epoch=1, m
     sys.stdout.flush()
 
     for epoch in range(start_epoch, max_epochs + 1):
+        # remove batch re-sizing for augmentation or adjust?
         dataset.resize_batch()
 
         # Set model to train mode
@@ -292,6 +267,7 @@ def train(dataset="kaggle_pna", arch="couplenet", net="res152", start_epoch=1, m
         data_iter = iter(dataloader)
         for step in range(iters_per_epoch):
             data = next(data_iter)
+
             im_data.data.resize_(data[0].size()).copy_(data[0])
             im_info.data.resize_(data[1].size()).copy_(data[1])
             gt_boxes.data.resize_(data[2].size()).copy_(data[2])
