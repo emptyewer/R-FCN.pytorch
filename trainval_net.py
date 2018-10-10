@@ -22,7 +22,7 @@ from torch.autograd import Variable
 from torch.utils.data.sampler import Sampler
 
 from model.utils.config import cfg, cfg_from_file, cfg_from_list
-from model.utils.net_utils import adjust_learning_rate, save_checkpoint, clip_gradient
+from model.utils.net_utils import adjust_learning_rate, save_checkpoint, clip_gradient, apply_augmentations
 
 
 # Data Sampler
@@ -53,13 +53,12 @@ class sampler(Sampler):
     def __len__(self):
         return self.num_data
 
-
-# issue with cuda devices?
 def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152", start_epoch=1, max_epochs=20,
-          disp_interval=100, checkpoint_interval=10000, save_dir="save", num_workers=4, cuda=True, large_scale=False,
-          mGPUs=True, ohem=False, batch_size=4, class_agnostic=False, anchor_scales=4, optimizer="sgd", lr=.001,
-          lr_decay_step=5, lr_decay_gamma=.1, session=1, resume=False, checksession=1, checkepoch=1, checkpoint=0,
-          use_tfboard=False, **kwargs):
+          disp_interval=100, save_dir="save", num_workers=4, cuda=True, large_scale=False, mGPUs=True, batch_size=4,
+          class_agnostic=False, anchor_scales=4, optimizer="sgd",lr_decay_step=5, lr_decay_gamma=.1, session=1,
+          resume=False, checksession=1, checkepoch=1, checkpoint=0, use_tfboard=False, flip_prob=0.0, scale=0.0,
+          scale_prob=0.0, translate=0.0, translate_prob=0.0, angle=0.0, rotate_prob=0.0,
+          shear_factor=0.0, shear_prob=0.0, **kwargs):
 
     # Import network definition
     if arch == 'rcnn':
@@ -268,9 +267,20 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
         for step in range(iters_per_epoch):
             data = next(data_iter)
 
-            im_data.data.resize_(data[0].size()).copy_(data[0])
+            data = next(data_iter)
+
+            # Apply augmentations
+            aug_img_tensors, aug_bbox_tensors = apply_augmentations(data[0], data[2], flip_prob=flip_prob, scale=scale,
+                                                                    scale_prob=scale_prob, translate=translate,
+                                                                    translate_prob=translate_prob, angle=angle,
+                                                                    rotate_prob=rotate_prob, shear_factor=shear_factor,
+                                                                    shear_prob=shear_prob)
+
+            # im_data.data.resize_(data[0].size()).copy_(data[0])
+            im_data.data.resize_(aug_img_tensors.size()).copy_(aug_img_tensors)
             im_info.data.resize_(data[1].size()).copy_(data[1])
-            gt_boxes.data.resize_(data[2].size()).copy_(data[2])
+            # gt_boxes.data.resize_(data[2].size()).copy_(data[2])
+            gt_boxes.data.resize_(aug_bbox_tensors.size()).copy_(aug_bbox_tensors)
             num_boxes.data.resize_(data[3].size()).copy_(data[3])
 
             # Compute multi-task loss
@@ -314,7 +324,7 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
 
                 print("[session %d][epoch %2d][iter %4d/%4d] loss: %.4f, lr: %.2e" \
                       % (session, epoch, step, iters_per_epoch, loss_temp, lr))
-                print("\t\t\tfg/bg=(%d/%d), time cost: %f" % (fg_cnt, bg_cnt, end-start))
+                print("\t\t\tfg/bg=(%d/%d), time cost: %f" % (fg_cnt, bg_cnt, end - start))
                 print("\t\t\trpn_cls: %.4f, rpn_box: %.4f, rcnn_cls: %.4f, rcnn_box %.4f" \
                       % (loss_rpn_cls, loss_rpn_box, loss_rcnn_cls, loss_rcnn_box))
                 if use_tfboard:
@@ -327,8 +337,6 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
                     }
                     for tag, value in info.items():
                         logger.scalar_summary(tag, value, step)
-
-                sys.stdout.flush()
 
                 loss_temp = 0
                 start = time.time()
