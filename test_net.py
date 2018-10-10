@@ -47,6 +47,11 @@ def test(dataset="kaggle_pna", test_ds="val", arch="couplenet", net="res152", se
          checksession = 1, checkepoch=1, checkpoint=10021, batch_size=1, vis=False, anchor_scales=4, min_conf=.5,
          **kwargs):
 
+    # create output directory
+    output_dir = os.path.join(output_dir, arch, net, dataset)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
     # Import network definition
     if arch == 'rcnn':
         from model.faster_rcnn.vgg16 import vgg16
@@ -215,9 +220,6 @@ def test(dataset="kaggle_pna", test_ds="val", arch="couplenet", net="res152", se
     data_iter = iter(dataloader)
 
     _t = {'im_detect': time.time(), 'misc': time.time()}
-    output_dir = os.path.join(output_dir, arch, net, dataset)
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
     det_file = os.path.join(output_dir, 'detections.pkl')
 
     # Turn on model evaluation mode, i.e. train=False
