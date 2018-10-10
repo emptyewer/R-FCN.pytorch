@@ -44,7 +44,7 @@ weight_decay = cfg.TRAIN.WEIGHT_DECAY
 
 def test(dataset="kaggle_pna", test_ds="val", arch="couplenet", net="res152", set_cfgs=None, load_dir="save",
          cuda=True, large_scale=False, mGPUs=True, class_agnostic=False, parallel_type=0, checksession = 1,
-         checkepoch=1, checkpoint=10021, batch_size=1, vis=True, anchor_scales=4, min_conf=.5, **kwargs):
+         checkepoch=1, checkpoint=10021, batch_size=1, vis=False, anchor_scales=4, min_conf=.5, **kwargs):
 
     # Import network definition
     if arch == 'rcnn':
