@@ -228,7 +228,7 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
                                  '{}_{}_{}_{}.pth'.format(arch, checksession, checkepoch, checkpoint))
         print("loading checkpoint %s" % (load_name))
         checkpoint = torch.load(load_name)
-        session = checkpoint['session']
+        session = checkpoint['session'] + 1
         start_epoch = checkpoint['epoch']
         model.load_state_dict(checkpoint['model'])
         optimizer.load_state_dict(checkpoint['optimizer'])
