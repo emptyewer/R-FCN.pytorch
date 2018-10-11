@@ -659,10 +659,14 @@ def apply_augmentations(img_tensors, bbox_tensors, flip_prob=0.5, scale=0.2, sca
 
     # Create augmentation instances
     aug_flip = RandomHorizontalFlip(prob=flip_prob)
-    aug_scale = RandomScale(scale=scale)
-    aug_translate = RandomTranslate(translate=translate)
-    aug_rotate = RandomRotate(angle=angle)
-    aug_shear = RandomShear(shear_factor=shear_factor)
+    if scale_prob > 0:
+        aug_scale = RandomScale(scale=scale)
+    if translate_prob > 0:
+        aug_translate = RandomTranslate(translate=translate)
+    if rotate_prob > 0:
+        aug_rotate = RandomRotate(angle=angle)
+    if shear_prob > 0:
+        aug_shear = RandomShear(shear_factor=shear_factor)
 
     # Loop over all the image tensors
     for i in range(len(img_tensors)):
