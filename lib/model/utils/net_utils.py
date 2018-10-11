@@ -542,17 +542,23 @@ class RandomRotate(object):
         range (-angle, angle). If tuple, the angle is drawn randomly from values specified by the tuple
     """
 
-    def __init__(self, angle=15):
+    def __init__(self, angle=15, discrete=False):
         self.angle = angle
-
-        if type(self.angle) == tuple:
-            assert len(self.angle) == 2, "Invalid range"
+        if not discrete:
+            if isinstance(self.angle, list):
+                assert len(self.angle) == 2, "Invalid range"
+            else:
+                self.angle = (-self.angle, self.angle)
+            self.dist_func = lambda x: random.uniform(*x)
         else:
-            self.angle = (-self.angle, self.angle)
+            if isinstance(self.angle,list):
+                self.dist_func = np.random.choice
+            else:
+                self.dist_func = lambda x: np.random.choice([x])
+
 
     def __call__(self, img, bboxes):
-
-        angle = random.uniform(*self.angle)
+        angle = self.dist_func(self.angle)
 
         w, h = img.shape[1], img.shape[0]
         cx, cy = w // 2, h // 2
@@ -633,7 +639,8 @@ class RandomShear(object):
 
 
 def apply_augmentations(img_tensors, bbox_tensors, flip_prob=0.5, scale=0.2, scale_prob=0.5, translate=0.2,
-                        translate_prob=0.5, angle=20.0, rotate_prob=0.5, shear_factor=0.2, shear_prob=0.5):
+                        translate_prob=0.5, angle=20.0, discrete=False, rotate_prob=0.5, shear_factor=0.2,
+                        shear_prob=0.5):
     """
     Applies augmentations (horizontal flip, scale, translate, rotate and shear) to image tensors
     and bounding box tensors and returns agumented image tensors and agumented bounding box tensors.
@@ -659,10 +666,14 @@ def apply_augmentations(img_tensors, bbox_tensors, flip_prob=0.5, scale=0.2, sca
 
     # Create augmentation instances
     aug_flip = RandomHorizontalFlip(prob=flip_prob)
-    aug_scale = RandomScale(scale=scale)
-    aug_translate = RandomTranslate(translate=translate)
-    aug_rotate = RandomRotate(angle=angle)
-    aug_shear = RandomShear(shear_factor=shear_factor)
+    if scale_prob > 0:
+        aug_scale = RandomScale(scale=scale)
+    if translate_prob > 0:
+        aug_translate = RandomTranslate(translate=translate)
+    if rotate_prob > 0:
+        aug_rotate = RandomRotate(angle=angle, discrete=discrete)
+    if shear_prob > 0:
+        aug_shear = RandomShear(shear_factor=shear_factor)
 
     # Loop over all the image tensors
     for i in range(len(img_tensors)):
