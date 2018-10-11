@@ -542,17 +542,24 @@ class RandomRotate(object):
         range (-angle, angle). If tuple, the angle is drawn randomly from values specified by the tuple
     """
 
-    def __init__(self, angle=15):
+    def __init__(self, angle=15, dist="cont"):
         self.angle = angle
 
-        if type(self.angle) == tuple:
-            assert len(self.angle) == 2, "Invalid range"
+        if dist == "cont":
+            if type(self.angle) is tuple or type(self.angle) is list:
+                assert len(self.angle) == 2, "Invalid range"
+            else:
+                self.angle = (-self.angle, self.angle)
+            self.dist_func = lambda x : random.uniform(*x)
+        elif dist == "discrete":
+            if type(self.angle) is int or type(self.angle) is float:
+                self.angle = (self.angle,)
+            self.dist_func = random.choice
         else:
-            self.angle = (-self.angle, self.angle)
-
+            raise ValueError("Angle Distribution {} not available ".format(dist))
     def __call__(self, img, bboxes):
 
-        angle = random.uniform(*self.angle)
+        angle = self.dist_func(self.angle)
 
         w, h = img.shape[1], img.shape[0]
         cx, cy = w // 2, h // 2
@@ -633,7 +640,7 @@ class RandomShear(object):
 
 
 def apply_augmentations(img_tensors, bbox_tensors, flip_prob=0.5, scale=0.2, scale_prob=0.5, translate=0.2,
-                        translate_prob=0.5, angle=20.0, rotate_prob=0.5, shear_factor=0.2, shear_prob=0.5):
+                        translate_prob=0.5, angle=20.0, dist="cont", rotate_prob=0.5, shear_factor=0.2, shear_prob=0.5):
     """
     Applies augmentations (horizontal flip, scale, translate, rotate and shear) to image tensors
     and bounding box tensors and returns agumented image tensors and agumented bounding box tensors.
@@ -643,7 +650,8 @@ def apply_augmentations(img_tensors, bbox_tensors, flip_prob=0.5, scale=0.2, sca
     scale_prob: probability of scaling an image and bounding box
     translate: float, the image is translated by a factor drawn randomly from a range (1 - translate , 1 + translate)
     translate_prob: float, probability of translating an image and bounding box
-    angle: float, the image is rotated by a factor drawn randomly from a range (-angle, angle)
+    angle: float, the image is rotated by a factor drawn randomly from a range (-angle, angle) or from a sequence
+    dist: str, specifies the distribution from which the rotation angle is drawn
     rotate_prob: float, probability of rotating an image and bounding box
     shear_factor: float, the image is sheared horizontally by a factor drawn randomly from a range (-shear_factor, shear_factor)
     shear_prob: float, probability of shearing an image and bounding box
@@ -664,7 +672,7 @@ def apply_augmentations(img_tensors, bbox_tensors, flip_prob=0.5, scale=0.2, sca
     if translate_prob > 0:
         aug_translate = RandomTranslate(translate=translate)
     if rotate_prob > 0:
-        aug_rotate = RandomRotate(angle=angle)
+        aug_rotate = RandomRotate(angle=angle, dist=dist)
     if shear_prob > 0:
         aug_shear = RandomShear(shear_factor=shear_factor)
 

@@ -57,7 +57,7 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
           disp_interval=100, save_dir="save", num_workers=4, cuda=True, large_scale=False, mGPUs=True, batch_size=4,
           class_agnostic=False, anchor_scales=4, optimizer="sgd",lr_decay_step=5, lr_decay_gamma=.1, session=1,
           resume=False, checksession=1, checkepoch=1, checkpoint=0, use_tfboard=False, flip_prob=0.0, scale=0.0,
-          scale_prob=0.0, translate=0.0, translate_prob=0.0, angle=0.0, rotate_prob=0.0,
+          scale_prob=0.0, translate=0.0, translate_prob=0.0, angle=0.0, dist="cont", rotate_prob=0.0,
           shear_factor=0.0, shear_prob=0.0, **kwargs):
 
     print("Train Arguments: {}".format(locals()))
@@ -274,8 +274,8 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
             aug_img_tensors, aug_bbox_tensors = apply_augmentations(data[0], data[2], flip_prob=flip_prob, scale=scale,
                                                                     scale_prob=scale_prob, translate=translate,
                                                                     translate_prob=translate_prob, angle=angle,
-                                                                    rotate_prob=rotate_prob, shear_factor=shear_factor,
-                                                                    shear_prob=shear_prob)
+                                                                    dist=dist, rotate_prob=rotate_prob,
+                                                                    shear_factor=shear_factor, shear_prob=shear_prob)
 
             # im_data.data.resize_(data[0].size()).copy_(data[0])
             im_data.data.resize_(aug_img_tensors.size()).copy_(aug_img_tensors)
