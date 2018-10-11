@@ -60,6 +60,8 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
           scale_prob=0.0, translate=0.0, translate_prob=0.0, angle=0.0, rotate_prob=0.0,
           shear_factor=0.0, shear_prob=0.0, **kwargs):
 
+    print("Train Arguments: {}".format(locals()))
+
     # Import network definition
     if arch == 'rcnn':
         from model.faster_rcnn.resnet import resnet

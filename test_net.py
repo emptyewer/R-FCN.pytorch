@@ -46,6 +46,8 @@ def test(dataset="kaggle_pna", test_ds="val", arch="couplenet", net="res152", lo
          cuda=True, large_scale=False, class_agnostic=False, checksession = 1, checkepoch=1, checkpoint=10021,
          batch_size=1, vis=False, anchor_scales=4, min_conf=.5, **kwargs):
 
+    print("Test Arguments: {}".format(locals()))
+
     # create output directory
     output_dir = os.path.join(output_dir, arch, net, dataset)
     if not os.path.exists(output_dir):
