@@ -55,12 +55,13 @@ def test(dataset="kaggle_pna", test_ds="val", arch="couplenet", net="res152", lo
 
     # Import network definition
     if arch == 'rcnn':
-        from model.faster_rcnn.vgg16 import vgg16
         from model.faster_rcnn.resnet import resnet
     elif arch == 'rfcn':
         from model.rfcn.resnet_atrous import resnet
+        from model.rfcn.densenet import chexnet
     elif arch == 'couplenet':
         from model.couplenet.resnet_atrous import resnet
+        from model.couplenet.densenet import chexnet
 
     from roi_data_layer.pnaRoiBatchLoader import roibatchLoader
     from roi_data_layer.pna_roidb import combined_roidb
@@ -138,20 +139,22 @@ def test(dataset="kaggle_pna", test_ds="val", arch="couplenet", net="res152", lo
     load_name = os.path.join(input_dir,
                              '{}_{}_{}_{}.pth'.format(arch, checksession, checkepoch, checkpoint))
 
-    # Initialize the network:
+    # Initilize the network:
     if net == 'vgg16':
         # model = vgg16(imdb.classes, pretrained=True, class_agnostic=args.class_agnostic)
         print("Pretrained model is not downloaded and network is not used")
     elif net == 'res18':
-        model = resnet(imdb.classes, 18, pretrained=False, class_agnostic=class_agnostic)
+        model = resnet(imdb.classes, 18, pretrained=False, class_agnostic=class_agnostic)  # TODO: Check dim error
     elif net == 'res34':
-        model = resnet(imdb.classes, 34, pretrained=False, class_agnostic=class_agnostic)
+        model = resnet(imdb.classes, 34, pretrained=False, class_agnostic=class_agnostic)   # TODO: Check dim error
     elif net == 'res50':
-        model = resnet(imdb.classes, 50, pretrained=False, class_agnostic=class_agnostic)
+        model = resnet(imdb.classes, 50, pretrained=False, class_agnostic=class_agnostic)   # TODO: Check dim error
     elif net == 'res101':
         model = resnet(imdb.classes, 101, pretrained=True, class_agnostic=class_agnostic)
     elif net == 'res152':
         model = resnet(imdb.classes, 152, pretrained=True, class_agnostic=class_agnostic)
+    elif net == 'chex121':
+        model = chexnet(imdb.classes, 121, pretrained=True, class_agnostic=class_agnostic)
     else:
         print("network is not defined")
         pdb.set_trace()
