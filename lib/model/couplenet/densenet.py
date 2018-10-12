@@ -29,14 +29,22 @@ def densenet121(pretrained=False, **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
     model = DenseNet121(classCount=14, isTrained=pretrained).cuda()
+
     if pretrained:
         import datasets
         model_repo_path = os.path.dirname(os.path.dirname(os.path.dirname(datasets.__file__)))
         # CHEXNET WEIGHTS
         pretrained_model_path = os.path.join(model_repo_path, 'data/pretrained_model/m-25012018-123527.pth.tar')
+
         model = torch.nn.DataParallel(model).cuda()
         modelCheckpoint = torch.load(pretrained_model_path)
-        model.load_state_dict(modelCheckpoint['state_dict'])
+
+        newModelCheckpoint_state_dict = OrderedDict()
+        for k, v in modelCheckpoint['state_dict'].items():
+            name = k[7:]  # remove `module: https://discuss.pytorch.org/t/solved-keyerror-unexpected-key-module-encoder-embedding-weight-in-state-dict/1686/3
+            newModelCheckpoint_state_dict[name] = v
+        model.load_state_dict(newModelCheckpoint_state_dict)
+
     return model
 
 class DenseNet121(nn.Module):
