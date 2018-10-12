@@ -37,12 +37,16 @@ def densenet121(pretrained=False, **kwargs):
         pretrained_model_path = os.path.join(model_repo_path, 'data/pretrained_model/m-25012018-123527.pth.tar')
 
         model = torch.nn.DataParallel(model).cuda()
-        modelCheckpoint = torch.load(pretrained_model_path)
 
+        modelCheckpoint = torch.load(pretrained_model_path)
         newModelCheckpoint_state_dict = OrderedDict()
         for k, v in modelCheckpoint['state_dict'].items():
             name = k[7:]  # remove `module: https://discuss.pytorch.org/t/solved-keyerror-unexpected-key-module-encoder-embedding-weight-in-state-dict/1686/3
             newModelCheckpoint_state_dict[name] = v
+
+        print("Old Model Keys {}".format(model.state_dict().keys()[:10]))
+        print("New Model Keys {}".format(newModelCheckpoint_state_dict.keys()[:10]))
+
         model.load_state_dict(newModelCheckpoint_state_dict)
 
     return model
