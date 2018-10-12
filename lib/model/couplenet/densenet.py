@@ -17,7 +17,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.model_zoo as model_zoo
 from collections import OrderedDict
-import os
 
 __all__ = ['DenseNet', 'densenet121', 'densenet169', 'densenet201', 'densenet161']
 
@@ -233,7 +232,8 @@ class DenseNet(nn.Module):
         out = self.classifier(out)
         return out
 
-class denseNet(CoupleNet):
+
+class chexnet(CoupleNet):
     def __init__(self, classes, num_layers=121, pretrained=False, class_agnostic=False):
         self.num_layers = num_layers
         self.dout_base_model = 1024
@@ -267,46 +267,25 @@ class denseNet(CoupleNet):
             densenet.features.norm5,
         )
 
-        self.RCNN_conv_1x1 = nn.Conv2d(in_channels=2048, out_channels=1024,
-                                       kernel_size=1, stride=1, padding=0, bias=False)
+        self.RCNN_conv_1x1 = nn.Conv2d(in_channels=1024, out_channels=1024,
+                  kernel_size=1, stride=1, padding=0, bias=False)
 
-        ### can include last dense layer here
         self.RCNN_conv_new = nn.Sequential(
             self.RCNN_conv_1x1,
             nn.ReLU()
         )
-        # Local feature layers
-        if self.class_agnostic:
-            self.RCNN_local_bbox_base = nn.Conv2d(in_channels=1024,
-                                                  out_channels=4 * cfg.POOLING_SIZE * cfg.POOLING_SIZE,
-                                                  kernel_size=1, stride=1, padding=0, bias=False)
-        else:
-            self.RCNN_local_bbox_base = nn.Conv2d(in_channels=1024,
-                                                  out_channels=4 * self.n_classes * cfg.POOLING_SIZE * cfg.POOLING_SIZE,
-                                                  kernel_size=1, stride=1, padding=0, bias=False)
-        self.RCNN_local_cls_base = nn.Conv2d(in_channels=1024,
-                                             out_channels=self.n_classes * cfg.POOLING_SIZE * cfg.POOLING_SIZE,
-                                             kernel_size=1, stride=1, padding=0, bias=False)
-        self.RCNN_local_cls_fc = nn.Conv2d(in_channels=self.n_classes, out_channels=self.n_classes,
-                                           kernel_size=1, stride=1, padding=0, bias=False)
-
-        # Global feature layers
-        self.RCNN_global_base = nn.Sequential(
-            nn.Conv2d(in_channels=1024, out_channels=1024, kernel_size=7, stride=1, padding=0, bias=False),
-            nn.ReLU(),
-            nn.Conv2d(in_channels=1024, out_channels=1024, kernel_size=1, stride=1, padding=0, bias=False),
-            nn.ReLU(),
-        )
-        self.RCNN_global_cls = nn.Conv2d(in_channels=1024, out_channels=self.n_classes, kernel_size=1, stride=1,
-                                         padding=0, bias=False)
 
         if self.class_agnostic:
-            self.RCNN_global_bbox = nn.Conv2d(in_channels=1024, out_channels=4, kernel_size=1, stride=1, padding=0,
-                                              bias=False)
+            self.RCNN_bbox_base = nn.Conv2d(in_channels=1024, out_channels=4 * cfg.POOLING_SIZE * cfg.POOLING_SIZE,
+                                            kernel_size=1, stride=1, padding=0, bias=False)
         else:
-            self.RCNN_global_bbox = nn.Conv2d(in_channels=1024, out_channels=4 * self.n_classes, kernel_size=1,
-                                              stride=1, padding=0,
-                                              bias=False)
+            self.RCNN_bbox_base = nn.Conv2d(in_channels=1024,
+                                            out_channels=4 * self.n_classes * cfg.POOLING_SIZE * cfg.POOLING_SIZE,
+                                            kernel_size=1, stride=1, padding=0, bias=False)
+
+        self.RCNN_cls_base = nn.Conv2d(in_channels=1024,
+                                       out_channels=self.n_classes * cfg.POOLING_SIZE * cfg.POOLING_SIZE,
+                                       kernel_size=1, stride=1, padding=0, bias=False)
 
         # Fix blocks
         for p in self.RCNN_base[0].parameters(): p.requires_grad = False
@@ -344,6 +323,8 @@ class denseNet(CoupleNet):
 
             self.RCNN_base.apply(set_bn_eval)
             self.RCNN_conv_new.apply(set_bn_eval)
+
+
 
 if __name__ == '__main__':
     import torch

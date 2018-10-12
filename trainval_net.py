@@ -70,9 +70,7 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
         from model.rfcn.densenet import chexnet
     elif arch == 'couplenet':
         from model.couplenet.resnet_atrous import resnet
-    ### REMOVE
-    elif arch == 'chexnet':
-        from model.chexnet.densenet import chexnet
+        from model.couplenet.densenet import chexnet
 
     from roi_data_layer.pnaRoiBatchLoader import roibatchLoader
     from roi_data_layer.pna_roidb import combined_roidb
