@@ -81,6 +81,7 @@ class chexnet(CoupleNet):
         densenet = eval('densenet{}({})'.format(self.num_layers, self.pretrained))
 
         # Build densene
+        # module attribute is needed for torch.nn.DataParallel which the pre-trained weights have
         self.RCNN_base = nn.Sequential(
             densenet.module.densenet121.features.conv0,
             densenet.module.densenet121.features.norm0,
