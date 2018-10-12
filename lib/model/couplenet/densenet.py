@@ -82,18 +82,18 @@ class chexnet(CoupleNet):
 
         # Build densene
         self.RCNN_base = nn.Sequential(
-            densenet.densenet121.features.conv0,
-            densenet.densenet121.features.norm0,
+            densenet.module.densenet121.features.conv0,
+            densenet.module.densenet121.features.norm0,
             # densenet.features.relu0,
             # densenet.features.pool0,
-            densenet.densenet121.features.denseblock1,
-            densenet.densenet121.features.transition1,
-            densenet.densenet121.features.denseblock2,
-            densenet.densenet121.features.transition2,
-            densenet.densenet121.features.denseblock3,
-            densenet.densenet121.features.transition3,
-            densenet.densenet121.features.denseblock4,
-            densenet.densenet121.features.norm5,
+            densenet.module.densenet121.features.denseblock1,
+            densenet.module.densenet121.features.transition1,
+            densenet.module.densenet121.features.denseblock2,
+            densenet.module.densenet121.features.transition2,
+            densenet.module.densenet121.features.denseblock3,
+            densenet.module.densenet121.features.transition3,
+            densenet.module.densenet121.features.denseblock4,
+            densenet.module.densenet121.features.norm5,
         )
 
         self.RCNN_conv_1x1 = nn.Conv2d(in_channels=1024, out_channels=1024,
