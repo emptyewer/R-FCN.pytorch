@@ -275,17 +275,38 @@ class chexnet(CoupleNet):
             nn.ReLU()
         )
 
+        # Local feature layers
         if self.class_agnostic:
-            self.RCNN_bbox_base = nn.Conv2d(in_channels=1024, out_channels=4 * cfg.POOLING_SIZE * cfg.POOLING_SIZE,
-                                            kernel_size=1, stride=1, padding=0, bias=False)
+            self.RCNN_local_bbox_base = nn.Conv2d(in_channels=1024,
+                                                  out_channels=4 * cfg.POOLING_SIZE * cfg.POOLING_SIZE,
+                                                  kernel_size=1, stride=1, padding=0, bias=False)
         else:
-            self.RCNN_bbox_base = nn.Conv2d(in_channels=1024,
-                                            out_channels=4 * self.n_classes * cfg.POOLING_SIZE * cfg.POOLING_SIZE,
-                                            kernel_size=1, stride=1, padding=0, bias=False)
+            self.RCNN_local_bbox_base = nn.Conv2d(in_channels=1024,
+                                                  out_channels=4 * self.n_classes * cfg.POOLING_SIZE * cfg.POOLING_SIZE,
+                                                  kernel_size=1, stride=1, padding=0, bias=False)
+        self.RCNN_local_cls_base = nn.Conv2d(in_channels=1024,
+                                             out_channels=self.n_classes * cfg.POOLING_SIZE * cfg.POOLING_SIZE,
+                                             kernel_size=1, stride=1, padding=0, bias=False)
+        self.RCNN_local_cls_fc = nn.Conv2d(in_channels=self.n_classes, out_channels=self.n_classes,
+                                           kernel_size=1, stride=1, padding=0, bias=False)
 
-        self.RCNN_cls_base = nn.Conv2d(in_channels=1024,
-                                       out_channels=self.n_classes * cfg.POOLING_SIZE * cfg.POOLING_SIZE,
-                                       kernel_size=1, stride=1, padding=0, bias=False)
+        # Global feature layers
+        self.RCNN_global_base = nn.Sequential(
+            nn.Conv2d(in_channels=1024, out_channels=1024, kernel_size=7, stride=1, padding=0, bias=False),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=1024, out_channels=1024, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.ReLU(),
+        )
+        self.RCNN_global_cls = nn.Conv2d(in_channels=1024, out_channels=self.n_classes, kernel_size=1, stride=1,
+                                         padding=0, bias=False)
+
+        if self.class_agnostic:
+            self.RCNN_global_bbox = nn.Conv2d(in_channels=1024, out_channels=4, kernel_size=1, stride=1, padding=0,
+                                              bias=False)
+        else:
+            self.RCNN_global_bbox = nn.Conv2d(in_channels=1024, out_channels=4 * self.n_classes, kernel_size=1,
+                                              stride=1, padding=0,
+                                              bias=False)
 
         # Fix blocks
         for p in self.RCNN_base[0].parameters(): p.requires_grad = False
@@ -324,16 +345,14 @@ class chexnet(CoupleNet):
             self.RCNN_base.apply(set_bn_eval)
             self.RCNN_conv_new.apply(set_bn_eval)
 
+    if __name__ == '__main__':
+        import torch
+        import numpy as np
+        from torch.autograd import Variable
 
+        input = torch.randn(3, 3, 600, 800)
 
-if __name__ == '__main__':
-    import torch
-    import numpy as np
-    from torch.autograd import Variable
-
-    input = torch.randn(3, 3, 600, 800)
-
-    model = resnet101().cuda()
-    input = Variable(input.cuda())
-    out = model(input)
-    print(out.size())
+        model = resnet101().cuda()
+        input = Variable(input.cuda())
+        out = model(input)
+        print(out.size())
