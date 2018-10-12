@@ -28,7 +28,7 @@ def densenet121(pretrained=False, **kwargs):
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = DenseNet121(classCount=14, pretrained=pretrained, **kwargs).cuda()
+    model = DenseNet121(classCount=14, isTrained=pretrained).cuda()
     if pretrained:
         import datasets
         model_repo_path = os.path.dirname(os.path.dirname(os.path.dirname(datasets.__file__)))
