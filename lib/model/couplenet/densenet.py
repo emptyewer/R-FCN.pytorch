@@ -44,8 +44,8 @@ def densenet121(pretrained=False, **kwargs):
             name = k[7:]  # remove `module: https://discuss.pytorch.org/t/solved-keyerror-unexpected-key-module-encoder-embedding-weight-in-state-dict/1686/3
             newModelCheckpoint_state_dict[name] = v
 
-        print("Old Model Keys {}".format(model.state_dict().keys()[:10]))
-        print("New Model Keys {}".format(newModelCheckpoint_state_dict.keys()[:10]))
+        print("Old Model Keys {}".format(list(model.state_dict())[:10]))
+        print("New Model Keys {}".format(list(newModelCheckpoint_state_dict)[:10]))
 
         model.load_state_dict(newModelCheckpoint_state_dict)
 
