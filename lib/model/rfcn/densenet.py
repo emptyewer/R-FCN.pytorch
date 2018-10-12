@@ -6,7 +6,7 @@ import math
 
 import torch.nn as nn
 
-from model.rfcn import _RFCN
+from model.rfcn.rfcn import _RFCN
 from model.utils.config import cfg
 
 # Pre-trained weights: https://github.com/jrzech/reproduce-chexnet
