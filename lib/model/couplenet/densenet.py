@@ -39,8 +39,8 @@ def densenet121(pretrained=False, **kwargs):
     model = DenseNet(num_init_features=64, growth_rate=32, block_config=(6, 12, 24, 16),
                      **kwargs)
     if pretrained:
-        import model
-        model_repo_path = os.path.dirname(os.path.dirname(os.path.dirname(model.__file__)))
+        import datasets
+        model_repo_path = os.path.dirname(os.path.dirname(os.path.dirname(datasets.__file__)))
         # CHEXNET WEIGHTS
         pretrained_model_path = os.path.join(model_repo_path, 'data/pretrained_model/m-25012018-123527.pth.tar')
         modelCheckpoint = torch.load(pretrained_model_path)
