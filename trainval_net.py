@@ -70,7 +70,7 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
     elif arch == 'couplenet':
         from model.couplenet.resnet_atrous import resnet
     elif arch == 'chexnet':
-        from model.couplenet.densenet import denseNet
+        from model.chexnet.densenet import chexnet
 
     from roi_data_layer.pnaRoiBatchLoader import roibatchLoader
     from roi_data_layer.pna_roidb import combined_roidb
@@ -195,8 +195,8 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
         model = resnet(imdb.classes, 101, pretrained=True, class_agnostic=class_agnostic)
     elif net == 'res152':
         model = resnet(imdb.classes, 152, pretrained=True, class_agnostic=class_agnostic)
-    elif net == 'dense121':
-        model = denseNet(imdb.classes, 121, pretrained=True, class_agnostic=class_agnostic)
+    elif net == 'chex121':
+        model = chexnet(imdb.classes, 121, pretrained=True, class_agnostic=class_agnostic)
     else:
         print("network is not defined")
         pdb.set_trace()
