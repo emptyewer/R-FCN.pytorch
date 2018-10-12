@@ -67,8 +67,10 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
         from model.faster_rcnn.resnet import resnet
     elif arch == 'rfcn':
         from model.rfcn.resnet_atrous import resnet
+        from model.rfcn.densenet import chexnet
     elif arch == 'couplenet':
         from model.couplenet.resnet_atrous import resnet
+    ### REMOVE
     elif arch == 'chexnet':
         from model.chexnet.densenet import chexnet
 
