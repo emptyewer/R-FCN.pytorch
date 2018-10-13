@@ -327,8 +327,8 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
                 print("[session %d][epoch %2d][iter %4d/%4d] loss: %.4f, lr: %.2e" \
                       % (session, epoch, step, iters_per_epoch, loss_temp, lr))
                 print("\t\t\tfg/bg=(%d/%d), time cost: %f" % (fg_cnt, bg_cnt, end - start))
-                print("\t\t\trpn_cls: %.4f, rpn_box: %.4f, rcnn_cls: %.4f, rcnn_box %.4f" \
-                      % (loss_rpn_cls, loss_rpn_box, loss_rcnn_cls, loss_rcnn_box))
+                print("\t\t\t batch_loss %.4f, %rpn_cls: %.4f, rpn_box: %.4f, rcnn_cls: %.4f, rcnn_box %.4f" \
+                      % (loss.data[0], loss_rpn_cls, loss_rpn_box, loss_rcnn_cls, loss_rcnn_box))
                 if use_tfboard:
                     info = {
                         'loss': loss_temp,
