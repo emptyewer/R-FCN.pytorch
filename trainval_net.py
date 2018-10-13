@@ -55,7 +55,7 @@ class sampler(Sampler):
 
 def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152", start_epoch=1, max_epochs=20,
           disp_interval=100, save_dir="save", num_workers=4, cuda=True, large_scale=False, mGPUs=True, batch_size=4,
-          class_agnostic=False, anchor_scales=4, optimizer="sgd",lr_decay_step=5, lr_decay_gamma=.1, session=1,
+          class_agnostic=False, anchor_scales=4, optimizer="sgd",lr_decay_step=10, lr_decay_gamma=.1, session=1,
           resume=False, checksession=1, checkepoch=1, checkpoint=0, use_tfboard=False, flip_prob=0.0, scale=0.0,
           scale_prob=0.0, translate=0.0, translate_prob=0.0, angle=0.0, dist="cont", rotate_prob=0.0,
           shear_factor=0.0, shear_prob=0.0, rpn_loss_cls_wt=1, rpn_loss_box_wt=1, RCNN_loss_cls_wt=1,
