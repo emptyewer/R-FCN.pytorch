@@ -59,7 +59,7 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
           resume=False, checksession=1, checkepoch=1, checkpoint=0, use_tfboard=False, flip_prob=0.0, scale=0.0,
           scale_prob=0.0, translate=0.0, translate_prob=0.0, angle=0.0, dist="cont", rotate_prob=0.0,
           shear_factor=0.0, shear_prob=0.0, rpn_loss_cls_wt=1, rpn_loss_box_wt=1, RCNN_loss_cls_wt=1,
-          RCNN_loss_bbox_wt=1, **kwargs):
+          RCNN_loss_bbox_wt=1, num_base_classes=3, **kwargs):
 
     print("Train Arguments: {}".format(locals()))
 
@@ -162,6 +162,7 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
     im_info = torch.FloatTensor(1)
     num_boxes = torch.LongTensor(1)
     gt_boxes = torch.FloatTensor(1)
+    base_classes = torch.FloatTensor(1)
 
 
     # Copy tensors in CUDA memory
@@ -170,12 +171,14 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
         im_info = im_info.cuda()
         num_boxes = num_boxes.cuda()
         gt_boxes = gt_boxes.cuda()
+        base_classes = base_classes.cuda()
 
     # Make variable
     im_data = Variable(im_data)
     im_info = Variable(im_info)
     num_boxes = Variable(num_boxes)
     gt_boxes = Variable(gt_boxes)
+    base_classes = Variable(base_classes)
 
     if cuda:
         cfg.CUDA = True
@@ -185,15 +188,20 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
         # model = vgg16(imdb.classes, pretrained=True, class_agnostic=args.class_agnostic)
         print("Pretrained model is not downloaded and network is not used")
     elif net == 'res18':
-        model = resnet(imdb.classes, 18, pretrained=False, class_agnostic=class_agnostic)  # TODO: Check dim error
+        model = resnet(imdb.classes, 18, pretrained=False, class_agnostic=class_agnostic,
+                       num_base_classes=num_base_classes)  # TODO: Check dim error
     elif net == 'res34':
-        model = resnet(imdb.classes, 34, pretrained=False, class_agnostic=class_agnostic)   # TODO: Check dim error
+        model = resnet(imdb.classes, 34, pretrained=False, class_agnostic=class_agnostic,
+                       num_base_classes=num_base_classes)   # TODO: Check dim error
     elif net == 'res50':
-        model = resnet(imdb.classes, 50, pretrained=False, class_agnostic=class_agnostic)   # TODO: Check dim error
+        model = resnet(imdb.classes, 50, pretrained=False, class_agnostic=class_agnostic,
+                       num_base_classes=num_base_classes)   # TODO: Check dim error
     elif net == 'res101':
-        model = resnet(imdb.classes, 101, pretrained=True, class_agnostic=class_agnostic)
+        model = resnet(imdb.classes, 101, pretrained=True, class_agnostic=class_agnostic,
+                       num_base_classes=num_base_classes)
     elif net == 'res152':
-        model = resnet(imdb.classes, 152, pretrained=True, class_agnostic=class_agnostic)
+        model = resnet(imdb.classes, 152, pretrained=True, class_agnostic=class_agnostic,
+                       num_base_classes=num_base_classes)
     else:
         print("network is not defined")
         pdb.set_trace()
@@ -284,16 +292,17 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
             # gt_boxes.data.resize_(data[2].size()).copy_(data[2])
             gt_boxes.data.resize_(aug_bbox_tensors.size()).copy_(aug_bbox_tensors)
             num_boxes.data.resize_(data[3].size()).copy_(data[3])
+            base_classes.data.resize_(data[4].size()).copy_(data[4])
 
             # Compute multi-task loss
             model.zero_grad()
             rois, cls_prob, bbox_pred, \
             rpn_loss_cls, rpn_loss_box, \
             RCNN_loss_cls, RCNN_loss_bbox, \
-            rois_label = model(im_data, im_info, gt_boxes, num_boxes)
+            rois_label, base_class_loss = model(im_data, im_info, gt_boxes, num_boxes, base_classes)
 
             loss = rpn_loss_cls_wt*rpn_loss_cls.mean() + rpn_loss_box_wt*rpn_loss_box.mean() + \
-                   RCNN_loss_cls_wt*RCNN_loss_cls.mean() + RCNN_loss_bbox_wt*RCNN_loss_bbox.mean()
+                   RCNN_loss_cls_wt*RCNN_loss_cls.mean() + RCNN_loss_bbox_wt*RCNN_loss_bbox.mean() + base_class_loss.mean()
             loss_temp += loss.data[0]
 
             # Backward pass to compute gradients and update weights
@@ -315,6 +324,7 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
                     loss_rpn_box = rpn_loss_box.mean().data[0]
                     loss_rcnn_cls = RCNN_loss_cls.mean().data[0]
                     loss_rcnn_box = RCNN_loss_bbox.mean().data[0]
+                    base_class_loss = base_class_loss.mean().data[0]
                     fg_cnt = torch.sum(rois_label.data.ne(0))
                     bg_cnt = rois_label.data.numel() - fg_cnt
                 else:
@@ -323,21 +333,23 @@ def train(dataset="kaggle_pna", train_ds ="train", arch="couplenet", net="res152
                     loss_rpn_box = rpn_loss_box.data[0]
                     loss_rcnn_cls = RCNN_loss_cls.data[0]
                     loss_rcnn_box = RCNN_loss_bbox.data[0]
+                    base_class_loss = base_class_loss.data[0]
                     fg_cnt = torch.sum(rois_label.data.ne(0))
                     bg_cnt = rois_label.data.numel() - fg_cnt
 
                 print("[session %d][epoch %2d][iter %4d/%4d] loss: %.4f, lr: %.2e" \
                       % (session, epoch, step, iters_per_epoch, loss_temp, lr))
                 print("\t\t\tfg/bg=(%d/%d), time cost: %f" % (fg_cnt, bg_cnt, end - start))
-                print("\t\t\t batch_loss: %.4f, rpn_cls: %.4f, rpn_box: %.4f, rcnn_cls: %.4f, rcnn_box %.4f" \
-                      % (batch_loss, loss_rpn_cls, loss_rpn_box, loss_rcnn_cls, loss_rcnn_box))
+                print("\t\t\t batch_loss: %.4f, rpn_cls: %.4f, rpn_box: %.4f, rcnn_cls: %.4f, rcnn_box %.4f, base_class_loss %.4f" \
+                      % (batch_loss, loss_rpn_cls, loss_rpn_box, loss_rcnn_cls, loss_rcnn_box, base_class_loss))
                 if use_tfboard:
                     info = {
                         'loss': loss_temp,
                         'loss_rpn_cls': loss_rpn_cls,
                         'loss_rpn_box': loss_rpn_box,
                         'loss_rcnn_cls': loss_rcnn_cls,
-                        'loss_rcnn_box': loss_rcnn_box
+                        'loss_rcnn_box': loss_rcnn_box,
+                        'base_class_loss': base_class_loss
                     }
                     for tag, value in info.items():
                         logger.scalar_summary(tag, value, step)

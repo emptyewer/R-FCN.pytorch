@@ -170,71 +170,72 @@ class ResNet(nn.Module):
         return x
 
 
-def resnet18(pretrained=False):
+def resnet18(pretrained=False, num_classes=1000):
     """Constructs a ResNet-18 model.
     Args:
       pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = ResNet(BasicBlock, [2, 2, 2, 2])
+    model = ResNet(BasicBlock, [2, 2, 2, 2], num_classes)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet18']))
     return model
 
 
-def resnet34(pretrained=False):
+def resnet34(pretrained=False, num_classes=1000):
     """Constructs a ResNet-34 model.
     Args:
       pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = ResNet(BasicBlock, [3, 4, 6, 3])
+    model = ResNet(BasicBlock, [3, 4, 6, 3], num_classes)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet34']))
     return model
 
 
-def resnet50(pretrained=False):
+def resnet50(pretrained=False, num_classes=1000):
     """Constructs a ResNet-50 model.
     Args:
       pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = ResNet(Bottleneck, [3, 4, 6, 3])
+    model = ResNet(Bottleneck, [3, 4, 6, 3], num_classes)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet50']))
     return model
 
 
-def resnet101(pretrained=False):
+def resnet101(pretrained=False, num_classes=1000):
     """Constructs a ResNet-101 model.
     Args:
       pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = ResNet(Bottleneck, [3, 4, 23, 3])
+    model = ResNet(Bottleneck, [3, 4, 23, 3], num_classes)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet101']))
     return model
 
 
-def resnet152(pretrained=False):
+def resnet152(pretrained=False, num_classes=1000):
     """Constructs a ResNet-152 model.
     Args:
       pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = ResNet(Bottleneck, [3, 8, 36, 3])
+    model = ResNet(Bottleneck, [3, 8, 36, 3], num_classes)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet152']))
     return model
 
 class resnet(CoupleNet):
-    def __init__(self, classes, num_layers=101, pretrained=False, class_agnostic=False):
+    def __init__(self, classes, num_layers=101, pretrained=False, class_agnostic=False, num_base_classes=1000):
         self.num_layers = num_layers
         self.dout_base_model = 1024
         self.pretrained = pretrained
         self.class_agnostic = class_agnostic
+        self.num_base_classes = num_base_classes
 
         CoupleNet.__init__(self, classes, class_agnostic)
 
     def _init_modules(self):
-        resnet = eval('resnet{}()'.format(self.num_layers))
+        resnet = eval('resnet{}(num_base_classes={})'.format(self.num_layers, self.num_base_classes))
 
         import model
         model_repo_path = os.path.dirname(os.path.dirname(os.path.dirname(model.__file__)))
@@ -244,7 +245,7 @@ class resnet(CoupleNet):
         if self.pretrained:
             print("Loading pretrained weights from %s" % model_path)
             state_dict = torch.load(model_path)
-            resnet.load_state_dict({k:v for k,v in state_dict.items() if k in resnet.state_dict()})
+            resnet.load_state_dict({k:v for k,v in state_dict.items() if k in resnet.state_dict()}, strict=False)
 
         # Build resnet.
         self.RCNN_base = nn.Sequential(
@@ -256,6 +257,9 @@ class resnet(CoupleNet):
             resnet.layer2,
             resnet.layer3,
         )
+
+        # base classifier
+        self.base_classifier = resnet
 
         self.RCNN_conv_1x1 = nn.Conv2d(in_channels=2048, out_channels=1024,
                   kernel_size=1, stride=1, padding=0, bias=False)
@@ -321,6 +325,9 @@ class resnet(CoupleNet):
             for fix_layer in range(6, 3 + cfg.RESNET.FIXED_BLOCKS, -1):
                 self.RCNN_base[fix_layer].train()
 
+            for fix_layer in range(10, 6, -1):
+                self.base_classifier[fix_layer].train()
+
             def set_bn_eval(m):
                 classname = m.__class__.__name__
                 if classname.find('BatchNorm') != -1:
@@ -328,6 +335,7 @@ class resnet(CoupleNet):
 
             self.RCNN_base.apply(set_bn_eval)
             self.RCNN_conv_new.apply(set_bn_eval)
+            self.base_classifier.apply(set_bn_eval)
 
 if __name__ == '__main__':
     import torch

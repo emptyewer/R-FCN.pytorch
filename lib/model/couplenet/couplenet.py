@@ -85,12 +85,13 @@ class CoupleNet(nn.Module):
 
         return loss_cls, loss_box
 
-    def forward(self, im_data, im_info, gt_boxes, num_boxes):
+    def forward(self, im_data, im_info, gt_boxes, num_boxes, base_classes):
         batch_size = im_data.size(0)
 
         im_info = im_info.data
         gt_boxes = gt_boxes.data
         num_boxes = num_boxes.data
+        base_classes = base_classes.data
         self.batch_size = im_data.size(0)
 
         # feed image data to base model to obtain base feature map
@@ -164,14 +165,20 @@ class CoupleNet(nn.Module):
         RCNN_loss_cls = 0
         RCNN_loss_bbox = 0
 
+        # Base Classification
+        base_img_cls = self.base_classifier(im_data)
+        base_class_loss = F.cross_entropy(base_img_cls, base_classes)
+
         if self.training:
             loss_func = self.ohem_detect_loss if cfg.TRAIN.OHEM else self.detect_loss
             RCNN_loss_cls, RCNN_loss_bbox = loss_func(cls_score, rois_label, bbox_pred, rois_target, rois_inside_ws, rois_outside_ws)
 
+
+
         cls_prob = cls_prob.view(batch_size, rois.size(1), -1)
         bbox_pred = bbox_pred.view(batch_size, rois.size(1), -1)
 
-        return rois, cls_prob, bbox_pred, rpn_loss_cls, rpn_loss_bbox, RCNN_loss_cls, RCNN_loss_bbox, rois_label
+        return rois, cls_prob, bbox_pred, rpn_loss_cls, rpn_loss_bbox, RCNN_loss_cls, RCNN_loss_bbox, rois_label, base_class_loss
 
     def _init_weights(self):
         def normal_init(m, mean, stddev, truncated=False):

@@ -37,6 +37,7 @@ class kaggle_pna(imdb):
                          'normal',
                          'lung opacity')
         self._class_to_ind = dict(zip(self.classes, xrange(self.num_classes)))
+        self._one_hot = dict(zip(self.classes[1:], [[1,0,0],[0,1,0],[0,0,1]]))
         self._image_ext = '.dcm'
         self._image_index = self._load_image_set_index()
         self._roidb_handler = self.gt_roidb
@@ -173,10 +174,12 @@ class kaggle_pna(imdb):
             gt_classes[ix] = cls
             overlaps[ix, cls] = 1.0  # TODO: Check if 0.0 makes any difference, check pascal data xml
             seg_areas[ix] = 0.0
+            base_cls = self._one_hot[obj['class'].lower()]
         overlaps = scipy.sparse.csr_matrix(overlaps)
 
         return {'boxes': boxes,
                 'gt_classes': gt_classes,
+                'base_class': base_cls,
                 'gt_ishard': ishards,
                 'gt_overlaps': overlaps,
                 'flipped': False,

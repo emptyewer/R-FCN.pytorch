@@ -28,9 +28,9 @@ def get_minibatch(roidb, num_classes, target_size):
             format(num_images, cfg.TRAIN.BATCH_SIZE)
 
     # Get the input image blob, formatted for caffe
-    im_blob, im_scales = _get_image_blob(roidb, target_size)
+    im_blob, im_scales, base_classes = _get_image_blob(roidb, target_size)
 
-    blobs = {'data': im_blob}
+    blobs = {'data': im_blob, 'base_classes': base_classes}
 
     assert len(im_scales) == 1, "Single batch only"
     assert len(roidb) == 1, "Single batch only"
@@ -63,6 +63,7 @@ def _get_image_blob(roidb, target_size):
 
     processed_ims = []
     im_scales = []
+    base_classes = []
     for i in range(num_images):
 
         # Read dicom
@@ -82,8 +83,9 @@ def _get_image_blob(roidb, target_size):
                                         cfg.TRAIN.MAX_SIZE)
         im_scales.append(im_scale)
         processed_ims.append(im)
+        base_classes.append(roidb[i]['base_class'])
 
     # Create a blob to hold the input images
     blob = im_list_to_blob(processed_ims)
 
-    return blob, im_scales
+    return blob, im_scales, base_classes
