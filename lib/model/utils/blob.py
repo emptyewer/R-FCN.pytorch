@@ -32,11 +32,18 @@ def im_list_to_blob(ims):
 
     return blob
 
-def prep_im_for_blob(im, pixel_means, target_size, max_size):
+
+def prep_im_for_blob(im, pixel_means, target_size, max_size,
+                     unit_normalize, pixel_stds):
     """Mean subtract and scale an image for use in a blob."""
 
     im = im.astype(np.float32, copy=False)
+    if unit_normalize:
+        im /= 255.0
+    # subtract mean
     im -= pixel_means
+    # divide by std dev.
+    im /= pixel_stds
     # im = im[:, :, ::-1]
     im_shape = im.shape
     im_size_min = np.min(im_shape[0:2])

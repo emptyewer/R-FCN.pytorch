@@ -80,7 +80,8 @@ def _get_image_blob(roidb, target_size):
         if roidb[i]['flipped']:
             im = im[:, ::-1, :]
         im, im_scale = prep_im_for_blob(im, cfg.PIXEL_MEANS, target_size[i],
-                                        cfg.TRAIN.MAX_SIZE)
+                                        cfg.TRAIN.MAX_SIZE, cfg.UNIT_NORMALIZE,
+                                        cfg.PIXEL_STDS)
         im_scales.append(im_scale)
         processed_ims.append(im)
         base_classes.append(roidb[i]['base_class'])
